@@ -35,7 +35,11 @@ impl Sniper {
     pub const NAME: &'static str = "sniper";
 
     pub fn new(cfg: SniperConfig) -> Self {
-        Self { cfg, launches: HashMap::new(), seen: 0 }
+        Self {
+            cfg,
+            launches: HashMap::new(),
+            seen: 0,
+        }
     }
 }
 
@@ -52,8 +56,9 @@ impl Strategy for Sniper {
         let cutoff = c.ts_ms.saturating_sub(self.cfg.creator_window_ms);
 
         self.seen += 1;
-        if self.seen % 10_000 == 0 {
-            self.launches.retain(|_, q| q.back().is_some_and(|&t| t >= cutoff));
+        if self.seen.is_multiple_of(10_000) {
+            self.launches
+                .retain(|_, q| q.back().is_some_and(|&t| t >= cutoff));
         }
 
         let q = self.launches.entry(c.creator.clone()).or_default();

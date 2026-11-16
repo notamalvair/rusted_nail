@@ -1,6 +1,8 @@
 //! Стрим pumpapi: один WebSocket на IP, без подписок — сервер шлёт всё, фильтруем сами.
 //! Формат полей взят из документации; сверить с живым стримом при первом запуске.
 
+#![cfg_attr(test, allow(clippy::panic, clippy::indexing_slicing))]
+
 use std::time::Duration;
 
 use futures_util::StreamExt;
@@ -42,9 +44,10 @@ fn pool(s: &str) -> Pool {
 
 fn wallets(v: Option<serde_json::Value>) -> Vec<String> {
     match v {
-        Some(serde_json::Value::Array(a)) => {
-            a.into_iter().filter_map(|x| x.as_str().map(str::to_owned)).collect()
-        }
+        Some(serde_json::Value::Array(a)) => a
+            .into_iter()
+            .filter_map(|x| x.as_str().map(str::to_owned))
+            .collect(),
         Some(serde_json::Value::Object(o)) => o.into_iter().map(|(k, _)| k).collect(),
         _ => Vec::new(),
     }
@@ -68,7 +71,11 @@ fn convert(w: Wire) -> Option<Event> {
                 signature: w.signature,
                 mint: w.mint,
                 pool,
-                side: if w.action == "buy" { Side::Buy } else { Side::Sell },
+                side: if w.action == "buy" {
+                    Side::Buy
+                } else {
+                    Side::Sell
+                },
                 trader: w.tx_signer,
                 traders: wallets(w.traders_involved),
                 token_amount,
@@ -89,7 +96,11 @@ fn convert(w: Wire) -> Option<Event> {
             block: w.block,
             ts_ms: w.timestamp,
         })),
-        "migrate" => Some(Event::Migrate(Migrate { mint: w.mint, block: w.block, ts_ms: w.timestamp })),
+        "migrate" => Some(Event::Migrate(Migrate {
+            mint: w.mint,
+            block: w.block,
+            ts_ms: w.timestamp,
+        })),
         _ => None,
     }
 }
@@ -117,7 +128,7 @@ pub async fn run(url: String, tx: mpsc::Sender<Event>) {
                 while let Some(msg) = ws.next().await {
                     match msg {
                         Ok(Message::Text(t)) => parse(t.as_bytes(), &mut buf),
-                        Ok(Message::Binary(b)) => parse(&b[..], &mut buf),
+                        Ok(Message::Binary(b)) => parse(b.as_ref(), &mut buf),
                         Ok(Message::Close(_)) => break,
                         Ok(_) => {}
                         Err(e) => {
@@ -153,8 +164,14 @@ mod tests {
                 "marketCapSol":40.0,"tradersInvolved":["W"],"block":1,"timestamp":2,"extra":{}}"#,
             &mut out,
         );
-        parse(br#"{"action":"buy","mint":"M","pool":"raydium-v4","tokenAmount":1,"price":1}"#, &mut out);
-        parse(br#"{"action":"transfer","txSigner":"W","transfers":[]}"#, &mut out);
+        parse(
+            br#"{"action":"buy","mint":"M","pool":"raydium-v4","tokenAmount":1,"price":1}"#,
+            &mut out,
+        );
+        parse(
+            br#"{"action":"transfer","txSigner":"W","transfers":[]}"#,
+            &mut out,
+        );
         assert_eq!(out.len(), 1);
         let Event::Trade(t) = &out[0] else { panic!() };
         assert_eq!((t.side, t.sol_amount, t.ts_ms), (Side::Buy, 0.5, 2));

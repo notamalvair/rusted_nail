@@ -100,7 +100,10 @@ pub fn load(path: &str) -> Result<Config> {
 
 impl Config {
     pub fn feed_url(&self) -> String {
-        self.feed.url.clone().unwrap_or_else(|| nail_feed::DEFAULT_URL.into())
+        self.feed
+            .url
+            .clone()
+            .unwrap_or_else(|| nail_feed::DEFAULT_URL.into())
     }
 
     pub fn exec(&self) -> ExecConfig {

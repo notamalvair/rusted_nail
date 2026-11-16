@@ -49,7 +49,12 @@ const DAY_MS: u64 = 86_400_000;
 
 impl RiskManager {
     pub fn new(cfg: RiskConfig) -> Self {
-        Self { cfg, day: 0, day_pnl_sol: 0.0, kill_switch: false }
+        Self {
+            cfg,
+            day: 0,
+            day_pnl_sol: 0.0,
+            kill_switch: false,
+        }
     }
 
     fn roll(&mut self, now_ms: u64) {

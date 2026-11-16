@@ -4,7 +4,7 @@
 mod config;
 
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result};
 use nail_core::{Event, Fill, Intent};
@@ -19,8 +19,21 @@ struct Live {
 }
 
 enum ExecMsg {
-    Sent { mint: String, signature: String, latency: Duration },
-    Failed { mint: String, err: String },
+    Sent {
+        mint: String,
+        signature: String,
+        latency: Duration,
+    },
+    Failed {
+        mint: String,
+        err: String,
+    },
+}
+
+fn now_ms() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |d| d.as_millis() as u64)
 }
 
 fn report_fill(engine: &mut Engine, intent_reason: &str, fill: &Fill) {
@@ -42,19 +55,33 @@ async fn main() -> Result<()> {
 
     let args: Vec<String> = std::env::args().skip(1).collect();
     let live_flag = args.iter().any(|a| a == "--live");
-    let path = args.iter().find(|a| !a.starts_with("--")).map_or("config.toml", String::as_str);
+    let path = args
+        .iter()
+        .find(|a| !a.starts_with("--"))
+        .map_or("config.toml", String::as_str);
     let cfg = config::load(path)?;
 
     let mut engine = cfg.engine();
     let mut sim = PaperExecutor::new(cfg.sim());
     let live = if live_flag {
         let key = std::env::var("PUMPAPI_API_KEY").context("PUMPAPI_API_KEY is not set")?;
-        let wallet = std::env::var("PUMPAPI_PUBLIC_KEY").context("PUMPAPI_PUBLIC_KEY is not set")?;
-        Some(Live { client: Arc::new(PumpApiClient::new(key, cfg.exec())?), wallet })
+        let wallet =
+            std::env::var("PUMPAPI_PUBLIC_KEY").context("PUMPAPI_PUBLIC_KEY is not set")?;
+        Some(Live {
+            client: Arc::new(PumpApiClient::new(key, cfg.exec())?),
+            wallet,
+        })
     } else {
         None
     };
-    println!("[bot] mode: {}", if live.is_some() { "LIVE (real funds)" } else { "paper" });
+    println!(
+        "[bot] mode: {}",
+        if live.is_some() {
+            "LIVE (real funds)"
+        } else {
+            "paper"
+        }
+    );
 
     let (ev_tx, mut ev_rx) = mpsc::channel::<Event>(65_536);
     tokio::spawn(nail_feed::run(cfg.feed_url(), ev_tx));
@@ -62,12 +89,29 @@ async fn main() -> Result<()> {
 
     let mut stats = tokio::time::interval(Duration::from_secs(30));
     let mut events: u64 = 0;
+    // Отставание стрима: наши часы минус время блока. Грубая оценка, зависит от синхронизации часов.
+    let (mut lag_sum, mut lag_max, mut lag_n) = (0u64, 0u64, 0u64);
+
+    if let Some(l) = &live {
+        let client = l.client.clone();
+        tokio::spawn(async move {
+            let mut tick = tokio::time::interval(Duration::from_secs(15));
+            loop {
+                tick.tick().await;
+                client.warm().await;
+            }
+        });
+    }
 
     loop {
         tokio::select! {
             ev = ev_rx.recv() => {
                 let Some(ev) = ev else { break };
                 events += 1;
+                let lag = now_ms().saturating_sub(ev.ts_ms());
+                lag_sum += lag;
+                lag_max = lag_max.max(lag);
+                lag_n += 1;
                 sim.observe(&ev);
 
                 // В боевом режиме исполнение подтверждается нашей же сделкой из стрима.
@@ -106,7 +150,8 @@ async fn main() -> Result<()> {
             },
             _ = stats.tick() => {
                 println!(
-                    "[stats] events={events} open={} exposure={:.4} realized={:+.5} day={:+.5} risk_rejects={} halted={}",
+                    "[stats] events={events} lag_avg={}ms lag_max={lag_max}ms open={} exposure={:.4} realized={:+.5} day={:+.5} risk_rejects={} halted={}",
+                    lag_sum.checked_div(lag_n).unwrap_or(0),
                     engine.portfolio.positions.len(),
                     engine.portfolio.exposure_sol(),
                     engine.portfolio.realized_pnl_sol,
@@ -114,6 +159,7 @@ async fn main() -> Result<()> {
                     engine.rejected,
                     engine.risk.halted(),
                 );
+                (lag_sum, lag_max, lag_n) = (0, 0, 0);
             }
         }
     }
@@ -121,11 +167,21 @@ async fn main() -> Result<()> {
 }
 
 fn submit(client: Arc<PumpApiClient>, intent: Intent, tx: mpsc::UnboundedSender<ExecMsg>) {
-    println!("[exec] {:?} {} | {} | {}", intent.side, intent.mint, intent.strategy, intent.reason);
+    println!(
+        "[exec] {:?} {} | {} | {}",
+        intent.side, intent.mint, intent.strategy, intent.reason
+    );
     tokio::spawn(async move {
         let msg = match client.trade(&intent).await {
-            Ok(s) => ExecMsg::Sent { mint: intent.mint, signature: s.signature, latency: s.latency },
-            Err(e) => ExecMsg::Failed { mint: intent.mint, err: format!("{e:#}") },
+            Ok(s) => ExecMsg::Sent {
+                mint: intent.mint,
+                signature: s.signature,
+                latency: s.latency,
+            },
+            Err(e) => ExecMsg::Failed {
+                mint: intent.mint,
+                err: format!("{e:#}"),
+            },
         };
         let _ = tx.send(msg);
     });

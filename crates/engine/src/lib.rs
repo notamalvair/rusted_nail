@@ -1,6 +1,8 @@
 //! Ядро принятия решений: события -> стратегии -> риск -> намерения.
 //! Чистая синхронная логика; исполнением занимается внешний слой и сообщает сюда fill/reject.
 
+#![cfg_attr(test, allow(clippy::panic, clippy::indexing_slicing))]
+
 use std::collections::HashMap;
 
 use nail_core::{Amount, Event, Fill, Intent, Mint, Portfolio, Side};
@@ -47,7 +49,8 @@ impl Engine {
     pub fn on_event(&mut self, ev: &Event) -> Vec<Intent> {
         let now = ev.ts_ms();
         let timeout = self.pending_timeout_ms;
-        self.pending.retain(|_, p| now.saturating_sub(p.ts_ms) < timeout);
+        self.pending
+            .retain(|_, p| now.saturating_sub(p.ts_ms) < timeout);
 
         if let Event::Trade(t) = ev {
             self.portfolio.mark(&t.mint, t.price);
@@ -71,12 +74,24 @@ impl Engine {
             }
         }
         for i in &out {
-            self.pending
-                .insert(i.mint.clone(), Pending { strategy: i.strategy, side: Side::Sell, sol: 0.0, ts_ms: now });
+            self.pending.insert(
+                i.mint.clone(),
+                Pending {
+                    strategy: i.strategy,
+                    side: Side::Sell,
+                    sol: 0.0,
+                    ts_ms: now,
+                },
+            );
         }
 
-        for idx in 0..self.strategies.len() {
-            let Some(intent) = self.strategies[idx].on_event(ev) else { continue };
+        // Сначала собираем сигналы: стратегии заимствуют self изменяемо.
+        let signals: Vec<Intent> = self
+            .strategies
+            .iter_mut()
+            .filter_map(|s| s.on_event(ev))
+            .collect();
+        for intent in signals {
             if self.pending.contains_key(&intent.mint) {
                 continue;
             }
@@ -112,7 +127,12 @@ impl Engine {
             };
             self.pending.insert(
                 intent.mint.clone(),
-                Pending { strategy: intent.strategy, side: intent.side, sol, ts_ms: now },
+                Pending {
+                    strategy: intent.strategy,
+                    side: intent.side,
+                    sol,
+                    ts_ms: now,
+                },
             );
             out.push(intent);
         }
@@ -121,7 +141,10 @@ impl Engine {
 
     /// Возвращает реализованный PnL для продаж.
     pub fn on_fill(&mut self, fill: &Fill) -> Option<f64> {
-        let strategy = self.pending.remove(&fill.mint).map_or("unknown", |p| p.strategy);
+        let strategy = self
+            .pending
+            .remove(&fill.mint)
+            .map_or("unknown", |p| p.strategy);
         let pnl = self.portfolio.apply_fill(fill, strategy);
         if let Some(pnl) = pnl {
             self.risk.on_realized(pnl, fill.ts_ms);
@@ -244,7 +267,10 @@ mod tests {
         for i in 0..4 {
             r.feed(trade("M", "same", Side::Buy, 1.0, px, 1_000 + i));
         }
-        assert!(r.engine.portfolio.positions.is_empty(), "один покупатель — не сигнал");
+        assert!(
+            r.engine.portfolio.positions.is_empty(),
+            "один покупатель — не сигнал"
+        );
         for i in 0..4 {
             r.feed(trade("M", &format!("w{i}"), Side::Buy, 0.1, px, 1_100 + i));
         }
@@ -253,7 +279,10 @@ mod tests {
 
     #[test]
     fn copytrade_follows_buy_and_sell() {
-        let cfg = CopyTradeConfig { size_sol: 0.03, wallets: ["whale".to_string()].into() };
+        let cfg = CopyTradeConfig {
+            size_sol: 0.03,
+            wallets: ["whale".to_string()].into(),
+        };
         let mut r = Rig::new(vec![Box::new(CopyTrade::new(cfg))]);
         r.feed(trade("M", "nobody", Side::Buy, 1.0, P0, 1_000));
         assert!(r.engine.portfolio.positions.is_empty());
@@ -265,14 +294,19 @@ mod tests {
 
     #[test]
     fn risk_caps_open_positions_and_pending_blocks_duplicates() {
-        let cfg = SniperConfig { max_launches_per_creator: 100, ..Default::default() };
+        let cfg = SniperConfig {
+            max_launches_per_creator: 100,
+            ..Default::default()
+        };
         let mut e = Engine::new(
             vec![Box::new(Sniper::new(cfg))],
             ExitRules::default(),
             RiskManager::new(RiskConfig::default()),
         );
         // Ничего не исполняем: все ордера остаются в полёте и считаются в лимитах.
-        let n: usize = (0..10).map(|i| e.on_event(&create(&format!("M{i}"), "d", 1_000 + i)).len()).sum();
+        let n: usize = (0..10)
+            .map(|i| e.on_event(&create(&format!("M{i}"), "d", 1_000 + i)).len())
+            .sum();
         assert_eq!(n, 5);
         assert_eq!(e.rejected, 5);
         assert!(e.is_pending("M0"));

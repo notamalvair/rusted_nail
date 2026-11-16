@@ -15,7 +15,10 @@ pub struct SimConfig {
 
 impl Default for SimConfig {
     fn default() -> Self {
-        Self { fee_rate: 0.015, slippage: 0.03 }
+        Self {
+            fee_rate: 0.015,
+            slippage: 0.03,
+        }
     }
 }
 
@@ -26,7 +29,10 @@ pub struct PaperExecutor {
 
 impl PaperExecutor {
     pub fn new(cfg: SimConfig) -> Self {
-        Self { cfg, last_price: HashMap::new() }
+        Self {
+            cfg,
+            last_price: HashMap::new(),
+        }
     }
 
     /// Вызывать на каждое событие до `fill`.
@@ -36,7 +42,9 @@ impl PaperExecutor {
                 self.last_price.insert(t.mint.clone(), t.price);
             }
             Event::Create(c) => {
-                self.last_price.entry(c.mint.clone()).or_insert(PUMP_INITIAL_PRICE_SOL);
+                self.last_price
+                    .entry(c.mint.clone())
+                    .or_insert(PUMP_INITIAL_PRICE_SOL);
             }
             _ => {}
         }

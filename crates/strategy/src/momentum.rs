@@ -49,7 +49,11 @@ impl Momentum {
     pub const NAME: &'static str = "momentum";
 
     pub fn new(cfg: MomentumConfig) -> Self {
-        Self { cfg, windows: HashMap::new(), seen: 0 }
+        Self {
+            cfg,
+            windows: HashMap::new(),
+            seen: 0,
+        }
     }
 }
 
@@ -67,9 +71,10 @@ impl Strategy for Momentum {
         let cutoff = now.saturating_sub(self.cfg.window_ms);
 
         self.seen += 1;
-        if self.seen % 50_000 == 0 {
+        if self.seen.is_multiple_of(50_000) {
             let stale = now.saturating_sub(self.cfg.window_ms.max(self.cfg.cooldown_ms));
-            self.windows.retain(|_, w| w.trades.back().is_some_and(|x| x.0 >= stale));
+            self.windows
+                .retain(|_, w| w.trades.back().is_some_and(|x| x.0 >= stale));
         }
 
         let w = self.windows.entry(t.mint.clone()).or_default();
@@ -79,8 +84,7 @@ impl Strategy for Momentum {
         };
         w.trades.push_back((now, signed, t.trader.clone()));
         w.net_sol += signed;
-        while w.trades.front().is_some_and(|x| x.0 < cutoff) {
-            let (_, s, _) = w.trades.pop_front().unwrap();
+        while let Some((_, s, _)) = w.trades.pop_front_if(|x| x.0 < cutoff) {
             w.net_sol -= s;
         }
 
@@ -88,12 +92,17 @@ impl Strategy for Momentum {
             || w.net_sol < self.cfg.min_net_buy_sol
             || t.market_cap_sol < self.cfg.min_mcap_sol
             || t.market_cap_sol > self.cfg.max_mcap_sol
-            || w.last_signal_ms.is_some_and(|l| now.saturating_sub(l) < self.cfg.cooldown_ms)
+            || w.last_signal_ms
+                .is_some_and(|l| now.saturating_sub(l) < self.cfg.cooldown_ms)
         {
             return None;
         }
-        let buyers: HashSet<&str> =
-            w.trades.iter().filter(|x| x.1 > 0.0).map(|x| x.2.as_str()).collect();
+        let buyers: HashSet<&str> = w
+            .trades
+            .iter()
+            .filter(|x| x.1 > 0.0)
+            .map(|x| x.2.as_str())
+            .collect();
         if buyers.len() < self.cfg.min_unique_buyers {
             return None;
         }

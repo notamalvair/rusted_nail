@@ -12,7 +12,10 @@ pub struct CopyTradeConfig {
 
 impl Default for CopyTradeConfig {
     fn default() -> Self {
-        Self { size_sol: 0.03, wallets: HashSet::new() }
+        Self {
+            size_sol: 0.03,
+            wallets: HashSet::new(),
+        }
     }
 }
 
