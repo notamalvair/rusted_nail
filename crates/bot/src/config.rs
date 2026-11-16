@@ -21,6 +21,14 @@ pub struct Config {
     sniper: SniperSection,
     momentum: MomentumSection,
     copytrade: CopySection,
+    ui: Ui,
+}
+
+#[derive(Deserialize, Default)]
+#[serde(default, deny_unknown_fields)]
+struct Ui {
+    enabled: Option<bool>,
+    addr: Option<String>,
 }
 
 #[derive(Deserialize, Default)]
@@ -106,6 +114,18 @@ impl Config {
             .url
             .clone()
             .unwrap_or_else(|| nail_feed::DEFAULT_URL.into())
+    }
+
+    /// Адрес панели управления; `None`, если она выключена.
+    pub fn ui_addr(&self) -> Result<Option<std::net::SocketAddr>> {
+        if !self.ui.enabled.unwrap_or(true) {
+            return Ok(None);
+        }
+        let addr = self.ui.addr.as_deref().unwrap_or("127.0.0.1:8787");
+        Ok(Some(
+            addr.parse()
+                .with_context(|| format!("bad ui.addr {addr}"))?,
+        ))
     }
 
     pub fn exec(&self) -> ExecConfig {

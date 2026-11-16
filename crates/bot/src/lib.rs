@@ -1,6 +1,7 @@
 //! Общее для бинарников: конфиг и шаг paper-торговли.
 
 pub mod config;
+pub mod ui;
 
 use nail_core::{Event, Fill, Intent};
 use nail_engine::Engine;

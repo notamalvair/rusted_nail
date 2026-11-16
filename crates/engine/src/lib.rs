@@ -3,7 +3,7 @@
 
 #![cfg_attr(test, allow(clippy::panic, clippy::indexing_slicing))]
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use nail_core::{Amount, Event, Fill, Intent, Mint, Portfolio, Side, Wallet};
 use nail_risk::RiskManager;
@@ -47,6 +47,8 @@ pub struct Engine {
     pub stats: BTreeMap<&'static str, StrategyStats>,
     tokens: HashMap<Mint, Token>,
     seen: u64,
+    /// Стратегии, которым запрещены новые покупки (продажи и выходы работают).
+    disabled: HashSet<&'static str>,
 }
 
 impl Engine {
@@ -63,7 +65,63 @@ impl Engine {
             stats: BTreeMap::new(),
             tokens: HashMap::new(),
             seen: 0,
+            disabled: HashSet::new(),
         }
+    }
+
+    /// Имена стратегий и включены ли у них покупки.
+    pub fn strategies(&self) -> Vec<(&'static str, bool)> {
+        self.strategies
+            .iter()
+            .map(|s| (s.name(), !self.disabled.contains(s.name())))
+            .collect()
+    }
+
+    /// Возвращает false, если такой стратегии нет.
+    pub fn set_strategy_enabled(&mut self, name: &str, enabled: bool) -> bool {
+        let Some(name) = self
+            .strategies
+            .iter()
+            .map(|s| s.name())
+            .find(|n| *n == name)
+        else {
+            return false;
+        };
+        if enabled {
+            self.disabled.remove(name);
+        } else {
+            self.disabled.insert(name);
+        }
+        true
+    }
+
+    /// Ручное закрытие позиции. `None`, если позиции нет или по ней уже летит ордер.
+    pub fn close(&mut self, mint: &str, now_ms: u64) -> Option<Intent> {
+        if self.pending.contains_key(mint) {
+            return None;
+        }
+        let pos = self.portfolio.positions.get(mint)?;
+        self.pending.insert(
+            mint.to_owned(),
+            Pending {
+                strategy: pos.strategy,
+                side: Side::Sell,
+                sol: 0.0,
+                ts_ms: now_ms,
+            },
+        );
+        Some(Intent {
+            strategy: pos.strategy,
+            mint: mint.to_owned(),
+            side: Side::Sell,
+            amount: Amount::Fraction(1.0),
+            reason: format!("manual close ({:+.1}%)", pos.pnl_pct() * 100.0),
+        })
+    }
+
+    pub fn close_all(&mut self, now_ms: u64) -> Vec<Intent> {
+        let mints: Vec<Mint> = self.portfolio.positions.keys().cloned().collect();
+        mints.iter().filter_map(|m| self.close(m, now_ms)).collect()
     }
 
     pub fn is_pending(&self, mint: &str) -> bool {
@@ -160,6 +218,9 @@ impl Engine {
             }
             let sol = match (intent.side, intent.amount) {
                 (Side::Buy, Amount::Sol(sol)) => {
+                    if self.disabled.contains(intent.strategy) {
+                        continue;
+                    }
                     if self.portfolio.positions.contains_key(&intent.mint) {
                         continue; // без доливок
                     }
@@ -354,6 +415,27 @@ mod tests {
         r.feed(Event::Create(c));
         assert!(r.engine.portfolio.positions.is_empty());
         assert_eq!(r.engine.risky_skipped, 1);
+    }
+
+    #[test]
+    fn disabled_strategy_stops_buying_and_manual_close_works() {
+        let cfg = SniperConfig {
+            max_launches_per_creator: 9,
+            ..Default::default()
+        };
+        let mut r = Rig::new(vec![Box::new(Sniper::new(cfg))]);
+        r.feed(create("A", "dev", 1_000));
+        assert!(r.engine.set_strategy_enabled("sniper", false));
+        assert!(!r.engine.set_strategy_enabled("nope", false));
+        r.feed(create("B", "dev", 1_100));
+        assert_eq!(r.engine.portfolio.positions.len(), 1);
+
+        let intents = r.engine.close_all(1_200);
+        assert_eq!(intents.len(), 1);
+        assert!(r.engine.close("A", 1_200).is_none(), "ордер уже в полёте");
+        let fill = r.sim.fill(&intents[0], &r.engine.portfolio, 1_200);
+        assert!(fill.is_some_and(|f| r.engine.on_fill(&f).is_some()));
+        assert!(r.engine.portfolio.positions.is_empty());
     }
 
     #[test]

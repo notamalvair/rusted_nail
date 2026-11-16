@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rusted_nail</title>
+<style>
+  :root {
+    --bg: #14110f; --panel: #1d1916; --line: #2e2823; --text: #e9e2d8; --dim: #8f8578;
+    --rust: #c8552b; --rust-hi: #e9703f; --good: #7fb069; --bad: #d9534f; --warn: #e0a83a;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 14px 20px; border-bottom: 1px solid var(--line); }
+  h1 { font: 600 18px var(--mono); margin: 0; letter-spacing: .02em; }
+  h1 b { color: var(--rust-hi); }
+  .badge { font: 600 11px var(--mono); padding: 3px 9px; border-radius: 3px; letter-spacing: .08em; }
+  .paper { background: #26313a; color: #9cc4e4; }
+  .live { background: var(--bad); color: #fff; }
+  .off { background: #3a2a1a; color: var(--warn); }
+  .spacer { flex: 1; }
+  button { font: 600 13px system-ui, sans-serif; border-radius: 4px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--panel); color: var(--text); padding: 8px 14px; }
+  button:hover { border-color: var(--dim); }
+  button:focus-visible { outline: 2px solid var(--rust-hi); outline-offset: 2px; }
+  button.stop { background: var(--bad); border-color: var(--bad); color: #fff; }
+  button.go { background: var(--good); border-color: var(--good); color: #10200a; }
+  button.danger { border-color: var(--bad); color: var(--bad); }
+  button.small { padding: 4px 10px; font-size: 12px; }
+  button:disabled { opacity: .4; cursor: default; }
+  main { padding: 20px; display: grid; gap: 20px; max-width: 1100px; margin: 0 auto; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; }
+  .tile .k { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+  .tile .v { font: 600 20px var(--mono); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; }
+  section h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--dim);
+    margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--line); font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 8px 14px; text-align: left; white-space: nowrap; }
+  th { color: var(--dim); font-weight: 500; font-size: 12px; }
+  tr + tr td { border-top: 1px solid var(--line); }
+  td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  td.m { font-family: var(--mono); }
+  td.r { color: var(--dim); white-space: normal; min-width: 220px; }
+  .pos { color: var(--good); } .neg { color: var(--bad); }
+  .empty { padding: 18px 14px; color: var(--dim); }
+  #err { display: none; background: var(--bad); color: #fff; padding: 8px 20px; }
+</style>
+</head>
+<body>
+<div id="err">Нет связи с ботом</div>
+<header>
+  <h1>rusted<b>_</b>nail</h1>
+  <span id="mode" class="badge paper">…</span>
+  <span id="halt" class="badge off" hidden></span>
+  <span class="spacer"></span>
+  <button id="kill"></button>
+  <button id="closeall" class="danger">Закрыть все позиции</button>
+</header>
+<main>
+  <div class="tiles" id="tiles"></div>
+  <section><h2>Стратегии</h2><div id="strategies"></div></section>
+  <section><h2>Позиции</h2><div id="positions"></div></section>
+  <section><h2>Последние сделки</h2><div id="fills"></div></section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+// Только textContent: названия токенов приходят из сети и могут содержать что угодно.
+function el(tag, text, cls) {
+  const e = document.createElement(tag);
+  if (text !== undefined) e.textContent = text;
+  if (cls) e.className = cls;
+  return e;
+}
+const sol = (x, sign) => (sign && x > 0 ? '+' : '') + x.toFixed(4);
+const tone = x => x > 0 ? 'pos' : x < 0 ? 'neg' : '';
+const short = m => m.length > 12 ? m.slice(0, 5) + '…' + m.slice(-5) : m;
+
+async function post(path, body) {
+  await fetch(path, {
+    method: 'POST',
+    headers: { 'x-nail-ui': '1', 'content-type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  refresh();
+}
+
+function table(target, heads, rows, emptyText) {
+  const box = $(target);
+  if (!rows.length) { box.replaceChildren(el('div', emptyText, 'empty')); return; }
+  const t = el('table'), hr = el('tr');
+  heads.forEach(([h, c]) => hr.append(el('th', h, c)));
+  t.append(hr);
+  rows.forEach(cells => {
+    const tr = el('tr');
+    cells.forEach(c => tr.append(c));
+    t.append(tr);
+  });
+  box.replaceChildren(t);
+}
+const td = (text, cls) => el('td', text, cls);
+function tdBtn(label, cls, onclick, disabled) {
+  const c = el('td', undefined, 'n'), b = el('button', label, 'small ' + cls);
+  b.onclick = onclick; b.disabled = !!disabled;
+  c.append(b);
+  return c;
+}
+
+let state = null;
+function render(s) {
+  state = s;
+  $('mode').textContent = s.live ? 'LIVE · РЕАЛЬНЫЕ ДЕНЬГИ' : 'PAPER';
+  $('mode').className = 'badge ' + (s.live ? 'live' : 'paper');
+  $('halt').hidden = !s.halted;
+  $('halt').textContent = s.kill_switch ? 'ПОКУПКИ ОСТАНОВЛЕНЫ' : 'ДНЕВНОЙ ЛИМИТ УБЫТКА';
+  const k = $('kill');
+  k.textContent = s.kill_switch ? 'Возобновить покупки' : 'Стоп покупок';
+  k.className = s.kill_switch ? 'go' : 'stop';
+  $('closeall').disabled = !s.positions.length;
+
+  const tiles = [
+    ['PnL за день, SOL', sol(s.day_pnl_sol, true), tone(s.day_pnl_sol)],
+    ['PnL всего, SOL', sol(s.realized_sol, true), tone(s.realized_sol)],
+    ['В позициях, SOL', sol(s.exposure_sol)],
+    ['Событий', s.events.toLocaleString('ru')],
+    ['Отставание стрима', s.lag_ms + ' мс'],
+    ['Отказов риска', String(s.risk_rejects)],
+  ];
+  $('tiles').replaceChildren(...tiles.map(([key, val, cls]) => {
+    const t = el('div', undefined, 'tile');
+    t.append(el('div', key, 'k'), el('div', val, 'v ' + (cls || '')));
+    return t;
+  }));
+
+  table('strategies',
+    [['Стратегия'], ['Покупок', 'n'], ['Продаж', 'n'], ['Прибыльных', 'n'], ['PnL, SOL', 'n'], ['', 'n']],
+    s.strategies.map(x => [
+      td(x.name, 'm'), td(String(x.buys), 'n'), td(String(x.sells), 'n'),
+      td(x.sells ? Math.round(100 * x.wins / x.sells) + '%' : '—', 'n'),
+      td(sol(x.pnl_sol, true), 'n ' + tone(x.pnl_sol)),
+      tdBtn(x.enabled ? 'Выключить покупки' : 'Включить покупки', x.enabled ? '' : 'go',
+        () => post('/api/strategy/' + encodeURIComponent(x.name), { on: !x.enabled })),
+    ]), 'В конфиге не включено ни одной стратегии');
+
+  table('positions',
+    [['Токен'], ['Стратегия'], ['Вложено, SOL', 'n'], ['PnL', 'n'], ['Возраст', 'n'], ['', 'n']],
+    s.positions.map(p => [
+      td(short(p.mint), 'm'), td(p.strategy, 'm'), td(sol(p.cost_sol), 'n'),
+      td((p.pnl_pct > 0 ? '+' : '') + (100 * p.pnl_pct).toFixed(1) + '%', 'n ' + tone(p.pnl_pct)),
+      td(p.age_s + ' с', 'n'),
+      tdBtn(p.closing ? 'Закрывается…' : 'Закрыть', 'danger',
+        () => post('/api/close/' + encodeURIComponent(p.mint)), p.closing),
+    ]), 'Открытых позиций нет');
+
+  table('fills',
+    [['Время'], [''], ['Токен'], ['SOL', 'n'], ['PnL, SOL', 'n'], ['Причина']],
+    s.fills.map(f => [
+      td(new Date(f.ts_ms).toLocaleTimeString('ru'), 'm'),
+      td(f.buy ? 'BUY' : 'SELL', 'm ' + (f.buy ? '' : 'neg')),
+      td(short(f.mint), 'm'), td(sol(f.sol), 'n'),
+      td(f.pnl_sol == null ? '—' : sol(f.pnl_sol, true), 'n ' + tone(f.pnl_sol || 0)),
+      td(f.reason, 'r'),
+    ]), 'Сделок пока не было');
+}
+
+async function refresh() {
+  try {
+    const r = await fetch('/api/state');
+    const s = await r.json();
+    $('err').style.display = 'none';
+    if (s && s.strategies) render(s);
+  } catch (e) {
+    $('err').style.display = 'block';
+  }
+}
+$('kill').onclick = () => state && post('/api/kill', { on: !state.kill_switch });
+$('closeall').onclick = () => {
+  if (state && confirm('Продать все ' + state.positions.length + ' позиций по рынку?')) post('/api/close-all');
+};
+refresh();
+setInterval(refresh, 1000);
+</script>
+</body>
+</html>

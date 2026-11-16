@@ -3,6 +3,10 @@
 [feed]
 url = "wss://stream.pumpapi.io/"
 
+[ui]              # панель управления в браузере
+enabled = true
+addr = "127.0.0.1:8787"   # только loopback; с сервера — через ssh -L 8787:127.0.0.1:8787
+
 [exec]            # только --live
 slippage = 20.0   # %, как в pumpapi
 priority_fee = 0.0001

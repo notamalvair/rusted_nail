@@ -1,15 +1,18 @@
 //! rusted_nail [config.toml] [--live]
 //! По умолчанию paper-режим: живой стрим, виртуальные сделки. Реальные деньги только с --live.
 
+use std::collections::VecDeque;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result};
+use nail_bot::ui::{self, Command, FillRow, PositionRow, Snapshot, StrategyRow};
 use nail_bot::{config, paper_step};
-use nail_core::{Event, Fill, Intent};
+use nail_core::{Event, Fill, Intent, Side};
+use nail_engine::Engine;
 use nail_exec::PumpApiClient;
 use nail_sim::PaperExecutor;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, watch};
 
 struct Live {
     client: Arc<PumpApiClient>,
@@ -28,13 +31,15 @@ enum ExecMsg {
     },
 }
 
+const RECENT_FILLS: usize = 50;
+
 fn now_ms() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_or(0, |d| d.as_millis() as u64)
 }
 
-fn log_fill(reason: &str, fill: &Fill, pnl: Option<f64>) {
+fn log_fill(recent: &mut VecDeque<FillRow>, reason: &str, fill: &Fill, pnl: Option<f64>) {
     println!(
         "[fill] {:?} {} tokens={:.0} sol={:.5} pnl={} | {}",
         fill.side,
@@ -44,6 +49,70 @@ fn log_fill(reason: &str, fill: &Fill, pnl: Option<f64>) {
         pnl.map_or("-".into(), |p| format!("{p:+.5}")),
         reason
     );
+    if recent.len() == RECENT_FILLS {
+        recent.pop_back();
+    }
+    recent.push_front(FillRow {
+        ts_ms: fill.ts_ms,
+        buy: fill.side == Side::Buy,
+        mint: fill.mint.clone(),
+        sol: fill.sol_amount,
+        pnl_sol: pnl,
+        reason: reason.to_owned(),
+    });
+}
+
+fn snapshot(
+    engine: &Engine,
+    live: bool,
+    events: u64,
+    lag_ms: u64,
+    recent: &VecDeque<FillRow>,
+) -> Snapshot {
+    let now = now_ms();
+    let mut positions: Vec<PositionRow> = engine
+        .portfolio
+        .positions
+        .iter()
+        .map(|(mint, p)| PositionRow {
+            mint: mint.clone(),
+            strategy: p.strategy,
+            cost_sol: p.cost_sol,
+            pnl_pct: p.pnl_pct(),
+            age_s: now.saturating_sub(p.opened_ms) / 1000,
+            closing: engine.is_pending(mint),
+        })
+        .collect();
+    positions.sort_by(|a, b| a.age_s.cmp(&b.age_s));
+    Snapshot {
+        live,
+        events,
+        lag_ms,
+        kill_switch: engine.risk.kill_switch(),
+        halted: engine.risk.halted(),
+        day_pnl_sol: engine.risk.day_pnl_sol(),
+        realized_sol: engine.portfolio.realized_pnl_sol,
+        exposure_sol: engine.portfolio.exposure_sol(),
+        risk_rejects: engine.rejected,
+        risky_skipped: engine.risky_skipped,
+        strategies: engine
+            .strategies()
+            .into_iter()
+            .map(|(name, enabled)| {
+                let s = engine.stats.get(name).cloned().unwrap_or_default();
+                StrategyRow {
+                    name,
+                    enabled,
+                    buys: s.buys,
+                    sells: s.sells,
+                    wins: s.wins,
+                    pnl_sol: s.pnl_sol,
+                }
+            })
+            .collect(),
+        positions,
+        fills: recent.iter().cloned().collect(),
+    }
 }
 
 #[tokio::main]
@@ -84,10 +153,17 @@ async fn main() -> Result<()> {
     tokio::spawn(nail_feed::run(cfg.feed_url(), ev_tx));
     let (ex_tx, mut ex_rx) = mpsc::unbounded_channel::<ExecMsg>();
 
-    let mut stats = tokio::time::interval(Duration::from_secs(30));
-    let mut events: u64 = 0;
-    // Отставание стрима: наши часы минус время блока. Грубая оценка, зависит от синхронизации часов.
-    let (mut lag_sum, mut lag_max, mut lag_n) = (0u64, 0u64, 0u64);
+    // Панель управления: команды приходят в этот цикл, состояние уходит снимком раз в секунду.
+    let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel::<Command>();
+    let (state_tx, state_rx) = watch::channel(String::from("{}"));
+    if let Some(addr) = cfg.ui_addr()? {
+        let cmd_tx = cmd_tx.clone();
+        tokio::spawn(async move {
+            if let Err(e) = ui::serve(addr, state_rx, cmd_tx).await {
+                eprintln!("[ui] stopped: {e:#}");
+            }
+        });
+    }
 
     if let Some(l) = &live {
         let client = l.client.clone();
@@ -100,18 +176,26 @@ async fn main() -> Result<()> {
         });
     }
 
+    let mut stats = tokio::time::interval(Duration::from_secs(30));
+    let mut ui_tick = tokio::time::interval(Duration::from_secs(1));
+    let mut events: u64 = 0;
+    // Отставание стрима: наши часы минус время блока. Грубая оценка, зависит от синхронизации часов.
+    let (mut lag_sum, mut lag_max, mut lag_n, mut lag_last) = (0u64, 0u64, 0u64, 0u64);
+    let mut recent: VecDeque<FillRow> = VecDeque::with_capacity(RECENT_FILLS);
+
     loop {
         tokio::select! {
             ev = ev_rx.recv() => {
                 let Some(ev) = ev else { break };
                 events += 1;
-                let lag = now_ms().saturating_sub(ev.ts_ms());
-                lag_sum += lag;
-                lag_max = lag_max.max(lag);
+                lag_last = now_ms().saturating_sub(ev.ts_ms());
+                lag_sum += lag_last;
+                lag_max = lag_max.max(lag_last);
                 lag_n += 1;
+
                 match &live {
                     None => paper_step(&mut engine, &mut sim, &ev, |i, f, pnl| {
-                        log_fill(&i.reason, f, pnl);
+                        log_fill(&mut recent, &i.reason, f, pnl);
                     }),
                     Some(l) => {
                         // Исполнение подтверждается нашей же сделкой из стрима.
@@ -126,7 +210,7 @@ async fn main() -> Result<()> {
                                     ts_ms: t.ts_ms,
                                 };
                                 let pnl = engine.on_fill(&fill);
-                                log_fill("confirmed on stream", &fill, pnl);
+                                log_fill(&mut recent, "confirmed on stream", &fill, pnl);
                             }
                         }
                         for intent in engine.on_event(&ev) {
@@ -144,6 +228,38 @@ async fn main() -> Result<()> {
                     engine.on_reject(&mint);
                 }
             },
+            Some(cmd) = cmd_rx.recv() => {
+                let now = now_ms();
+                let intents = match cmd {
+                    Command::Kill(on) => {
+                        println!("[ui] kill switch: {on}");
+                        engine.risk.set_kill_switch(on);
+                        Vec::new()
+                    }
+                    Command::Strategy { name, enabled } => {
+                        if engine.set_strategy_enabled(&name, enabled) {
+                            println!("[ui] strategy {name}: buys enabled = {enabled}");
+                        }
+                        Vec::new()
+                    }
+                    Command::Close(mint) => engine.close(&mint, now).into_iter().collect(),
+                    Command::CloseAll => engine.close_all(now),
+                };
+                for intent in intents {
+                    println!("[ui] {} {}", intent.reason, intent.mint);
+                    match &live {
+                        // Исполнится на ближайшем событии стрима, с обычной задержкой.
+                        None => sim.submit(intent, now),
+                        Some(l) => submit(l.client.clone(), intent, ex_tx.clone()),
+                    }
+                }
+            }
+            _ = ui_tick.tick() => {
+                let snap = snapshot(&engine, live.is_some(), events, lag_last, &recent);
+                if let Ok(json) = serde_json::to_string(&snap) {
+                    state_tx.send_replace(json);
+                }
+            }
             _ = stats.tick() => {
                 println!(
                     "[stats] events={events} lag_avg={}ms lag_max={lag_max}ms open={} exposure={:.4} realized={:+.5} day={:+.5} risk_rejects={} halted={}",

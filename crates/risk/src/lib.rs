@@ -70,6 +70,10 @@ impl RiskManager {
         self.kill_switch = on;
     }
 
+    pub fn kill_switch(&self) -> bool {
+        self.kill_switch
+    }
+
     pub fn day_pnl_sol(&self) -> f64 {
         self.day_pnl_sol
     }
