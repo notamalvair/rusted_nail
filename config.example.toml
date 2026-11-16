@@ -1,0 +1,46 @@
+# Скопируй в config.toml. Все числа — заглушки до анализа паркетов.
+
+[feed]
+url = "wss://stream.pumpapi.io/"
+
+[exec]            # только --live
+slippage = 20.0   # %, как в pumpapi
+priority_fee = 0.0001
+
+[sim]             # paper-режим
+fee_rate = 0.015  # ДОПУЩЕНИЕ: 0.25% pumpapi + комиссия pump.fun, уточнить
+slippage = 0.03
+
+[risk]
+max_position_sol = 0.05
+max_open_positions = 5
+max_exposure_sol = 0.25
+daily_loss_limit_sol = 0.2
+
+[exits]
+take_profit_pct = 0.5
+stop_loss_pct = 0.2
+trailing_stop_pct = 0.25   # убери строку, чтобы выключить
+max_hold_ms = 120000
+
+[sniper]
+enabled = true
+size_sol = 0.02
+max_launches_per_creator = 1
+creator_window_ms = 86400000
+blacklist = []
+
+[momentum]
+enabled = true
+size_sol = 0.03
+window_ms = 5000
+min_net_buy_sol = 3.0
+min_unique_buyers = 5
+min_mcap_sol = 35.0
+max_mcap_sol = 200.0
+cooldown_ms = 60000
+
+[copytrade]
+enabled = false
+size_sol = 0.03
+wallets = []

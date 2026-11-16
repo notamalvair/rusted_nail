@@ -1,0 +1,33 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "UNLICENSED"
+
+[workspace.dependencies]
+nail-core = { path = "crates/core" }
+nail-strategy = { path = "crates/strategy" }
+nail-risk = { path = "crates/risk" }
+nail-engine = { path = "crates/engine" }
+nail-sim = { path = "crates/sim" }
+nail-feed = { path = "crates/feed" }
+nail-exec = { path = "crates/exec" }
+
+anyhow = "1"
+futures-util = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "sync"] }
+tokio-tungstenite = { version = "0.29", features = ["rustls-tls-webpki-roots"] }
+toml = "0.8"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"

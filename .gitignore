@@ -1,0 +1,7 @@
+/target
+.env
+config.toml
+*.parquet
+*.jsonl
+*.zst
+/data

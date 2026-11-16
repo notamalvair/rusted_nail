@@ -1,0 +1,9 @@
+[package]
+name = "nail-sim"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+nail-core.workspace = true
