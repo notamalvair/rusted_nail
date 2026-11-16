@@ -30,6 +30,9 @@ struct Wire {
     market_cap_sol: Option<f64>,
     name: Option<String>,
     symbol: Option<String>,
+    mint_authority: Option<String>,
+    freeze_authority: Option<String>,
+    token_extensions: Option<serde_json::Value>,
     block: u64,
     timestamp: u64,
 }
@@ -58,6 +61,11 @@ fn convert(w: Wire) -> Option<Event> {
     if pool == Pool::Other || w.mint.is_empty() {
         return None;
     }
+    let risky = w.mint_authority.is_some()
+        || w.freeze_authority.is_some()
+        || w.token_extensions
+            .as_ref()
+            .is_some_and(|e| e.get("transferFeeConfig").is_some());
     match w.action.as_str() {
         "buy" | "sell" => {
             let price = w.price_sol.or(w.price)?;
@@ -82,6 +90,7 @@ fn convert(w: Wire) -> Option<Event> {
                 sol_amount,
                 price,
                 market_cap_sol: w.market_cap_sol.unwrap_or(0.0),
+                risky,
                 block: w.block,
                 ts_ms: w.timestamp,
             }))
@@ -93,6 +102,7 @@ fn convert(w: Wire) -> Option<Event> {
             creator: w.pool_created_by.unwrap_or(w.tx_signer),
             name: w.name.unwrap_or_default(),
             symbol: w.symbol.unwrap_or_default(),
+            risky,
             block: w.block,
             ts_ms: w.timestamp,
         })),
@@ -175,6 +185,14 @@ mod tests {
         assert_eq!(out.len(), 1);
         let Event::Trade(t) = &out[0] else { panic!() };
         assert_eq!((t.side, t.sol_amount, t.ts_ms), (Side::Buy, 0.5, 2));
-        assert!(t.involves("W"));
+        assert!(t.involves("W") && !t.risky);
+
+        out.clear();
+        parse(
+            br#"{"action":"create","mint":"M","pool":"pump","txSigner":"D","freezeAuthority":"F",
+                "mintAuthority":null,"block":1,"timestamp":2}"#,
+            &mut out,
+        );
+        assert!(out[0].risky());
     }
 }

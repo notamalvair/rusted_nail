@@ -10,6 +10,7 @@ priority_fee = 0.0001
 [sim]             # paper-режим
 fee_rate = 0.015  # ДОПУЩЕНИЕ: 0.25% pumpapi + комиссия pump.fun, уточнить
 slippage = 0.03
+latency_ms = 400   # задержка сигнал -> исполнение; 400 = примерно один слот
 
 [risk]
 max_position_sol = 0.05
@@ -22,6 +23,7 @@ take_profit_pct = 0.5
 stop_loss_pct = 0.2
 trailing_stop_pct = 0.25   # убери строку, чтобы выключить
 max_hold_ms = 120000
+exit_on_dev_sell = true
 
 [sniper]
 enabled = true

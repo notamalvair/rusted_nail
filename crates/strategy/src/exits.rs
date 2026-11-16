@@ -8,6 +8,8 @@ pub struct ExitRules {
     /// Откат от максимума; работает только когда максимум выше цены входа.
     pub trailing_stop_pct: Option<f64>,
     pub max_hold_ms: u64,
+    /// Выходить и не входить, если создатель токена начал продавать.
+    pub exit_on_dev_sell: bool,
 }
 
 impl Default for ExitRules {
@@ -17,6 +19,7 @@ impl Default for ExitRules {
             stop_loss_pct: 0.2,
             trailing_stop_pct: Some(0.25),
             max_hold_ms: 120_000,
+            exit_on_dev_sell: true,
         }
     }
 }

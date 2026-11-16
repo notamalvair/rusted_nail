@@ -3,9 +3,9 @@
 
 #![cfg_attr(test, allow(clippy::panic, clippy::indexing_slicing))]
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
-use nail_core::{Amount, Event, Fill, Intent, Mint, Portfolio, Side};
+use nail_core::{Amount, Event, Fill, Intent, Mint, Portfolio, Side, Wallet};
 use nail_risk::RiskManager;
 use nail_strategy::{ExitRules, Strategy};
 
@@ -16,6 +16,23 @@ struct Pending {
     ts_ms: u64,
 }
 
+struct Token {
+    creator: Wallet,
+    created_ms: u64,
+    dev_sold: bool,
+}
+
+#[derive(Default, Clone, Debug)]
+pub struct StrategyStats {
+    pub buys: u64,
+    pub sells: u64,
+    pub wins: u64,
+    pub pnl_sol: f64,
+}
+
+/// Сколько помним создателя токена после запуска.
+const TOKEN_TTL_MS: u64 = 6 * 3_600_000;
+
 pub struct Engine {
     strategies: Vec<Box<dyn Strategy>>,
     exits: ExitRules,
@@ -25,6 +42,11 @@ pub struct Engine {
     /// Через сколько считаем неподтверждённый ордер потерянным.
     pub pending_timeout_ms: u64,
     pub rejected: u64,
+    /// События, пропущенные из-за признаков ловушки.
+    pub risky_skipped: u64,
+    pub stats: BTreeMap<&'static str, StrategyStats>,
+    tokens: HashMap<Mint, Token>,
+    seen: u64,
 }
 
 impl Engine {
@@ -37,6 +59,10 @@ impl Engine {
             pending: HashMap::new(),
             pending_timeout_ms: 15_000,
             rejected: 0,
+            risky_skipped: 0,
+            stats: BTreeMap::new(),
+            tokens: HashMap::new(),
+            seen: 0,
         }
     }
 
@@ -52,9 +78,35 @@ impl Engine {
         self.pending
             .retain(|_, p| now.saturating_sub(p.ts_ms) < timeout);
 
-        if let Event::Trade(t) = ev {
-            self.portfolio.mark(&t.mint, t.price);
+        match ev {
+            Event::Create(c) => {
+                self.tokens.insert(
+                    c.mint.clone(),
+                    Token {
+                        creator: c.creator.clone(),
+                        created_ms: now,
+                        dev_sold: false,
+                    },
+                );
+            }
+            Event::Trade(t) => {
+                self.portfolio.mark(&t.mint, t.price);
+                if t.side == Side::Sell {
+                    if let Some(tok) = self.tokens.get_mut(&t.mint) {
+                        tok.dev_sold |= t.involves(&tok.creator);
+                    }
+                }
+            }
+            Event::Migrate(_) => {}
         }
+        self.seen += 1;
+        if self.seen.is_multiple_of(100_000) {
+            let positions = &self.portfolio.positions;
+            self.tokens.retain(|m, t| {
+                now.saturating_sub(t.created_ms) < TOKEN_TTL_MS || positions.contains_key(m)
+            });
+        }
+        let dev_exit = self.exits.exit_on_dev_sell;
 
         let mut out = Vec::new();
 
@@ -63,7 +115,13 @@ impl Engine {
             if self.pending.contains_key(mint) {
                 continue;
             }
-            if let Some(reason) = self.exits.check(pos, now) {
+            let dev_sold = dev_exit && self.tokens.get(mint).is_some_and(|t| t.dev_sold);
+            let reason = if dev_sold {
+                Some("dev sold")
+            } else {
+                self.exits.check(pos, now)
+            };
+            if let Some(reason) = reason {
                 out.push(Intent {
                     strategy: pos.strategy,
                     mint: mint.clone(),
@@ -85,6 +143,11 @@ impl Engine {
             );
         }
 
+        if ev.risky() {
+            self.risky_skipped += 1;
+            return out;
+        }
+
         // Сначала собираем сигналы: стратегии заимствуют self изменяемо.
         let signals: Vec<Intent> = self
             .strategies
@@ -99,6 +162,9 @@ impl Engine {
                 (Side::Buy, Amount::Sol(sol)) => {
                     if self.portfolio.positions.contains_key(&intent.mint) {
                         continue; // без доливок
+                    }
+                    if dev_exit && self.tokens.get(&intent.mint).is_some_and(|t| t.dev_sold) {
+                        continue;
                     }
                     let buys = self.pending.values().filter(|p| p.side == Side::Buy);
                     let (n, pend_sol) = buys.fold((0, 0.0), |(n, s), p| (n + 1, s + p.sol));
@@ -141,13 +207,24 @@ impl Engine {
 
     /// Возвращает реализованный PnL для продаж.
     pub fn on_fill(&mut self, fill: &Fill) -> Option<f64> {
-        let strategy = self
-            .pending
-            .remove(&fill.mint)
-            .map_or("unknown", |p| p.strategy);
+        let strategy = match self.pending.remove(&fill.mint) {
+            Some(p) => p.strategy,
+            None => self
+                .portfolio
+                .positions
+                .get(&fill.mint)
+                .map_or("unknown", |p| p.strategy),
+        };
         let pnl = self.portfolio.apply_fill(fill, strategy);
-        if let Some(pnl) = pnl {
-            self.risk.on_realized(pnl, fill.ts_ms);
+        let s = self.stats.entry(strategy).or_default();
+        match pnl {
+            Some(pnl) => {
+                s.sells += 1;
+                s.wins += u64::from(pnl > 0.0);
+                s.pnl_sol += pnl;
+                self.risk.on_realized(pnl, fill.ts_ms);
+            }
+            None => s.buys += 1,
         }
         pnl
     }
@@ -175,6 +252,7 @@ mod tests {
             creator: creator.into(),
             name: "n".into(),
             symbol: "S".into(),
+            risky: false,
             block: 0,
             ts_ms: ts,
         })
@@ -192,6 +270,7 @@ mod tests {
             sol_amount: sol,
             price,
             market_cap_sol: price * 1e9,
+            risky: false,
             block: 0,
             ts_ms: ts,
         })
@@ -249,6 +328,32 @@ mod tests {
         r.feed(trade("A", "x", Side::Sell, 1.0, P0 * 0.5, 2_000));
         assert!(r.log[1].1.starts_with("stop loss"));
         assert!(r.engine.portfolio.realized_pnl_sol < 0.0);
+    }
+
+    #[test]
+    fn dev_sell_triggers_exit_and_blocks_reentry() {
+        let cfg = SniperConfig {
+            max_launches_per_creator: 9,
+            ..Default::default()
+        };
+        let mut r = Rig::new(vec![Box::new(Sniper::new(cfg))]);
+        r.feed(create("A", "dev", 1_000));
+        r.feed(trade("A", "dev", Side::Sell, 1.0, P0, 1_500));
+        assert!(r.engine.portfolio.positions.is_empty());
+        assert!(r.log[1].1.starts_with("dev sold"));
+        assert_eq!(r.engine.stats["sniper"].sells, 1);
+    }
+
+    #[test]
+    fn risky_events_never_reach_strategies() {
+        let mut r = Rig::new(vec![Box::new(Sniper::new(SniperConfig::default()))]);
+        let Event::Create(mut c) = create("A", "dev", 1_000) else {
+            return;
+        };
+        c.risky = true;
+        r.feed(Event::Create(c));
+        assert!(r.engine.portfolio.positions.is_empty());
+        assert_eq!(r.engine.risky_skipped, 1);
     }
 
     #[test]

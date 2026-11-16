@@ -1,7 +1,12 @@
-//! Paper-исполнение: мгновенный fill по последней цене с комиссией и проскальзыванием.
-//! TODO(backtest): задержка в слотах и влияние на цену по резервам кривой.
+#![cfg_attr(test, allow(clippy::indexing_slicing))]
+//! Paper-исполнение: fill по цене через `latency_ms` после сигнала, с комиссией и проскальзыванием.
+//! Влияние собственной сделки на цену не моделируется (при малых размерах оно доли процента).
 
-use std::collections::HashMap;
+mod race;
+
+pub use race::RaceStats;
+
+use std::collections::{HashMap, VecDeque};
 
 use nail_core::{Amount, Event, Fill, Intent, Mint, Portfolio, Side, PUMP_INITIAL_PRICE_SOL};
 
@@ -11,6 +16,8 @@ pub struct SimConfig {
     pub fee_rate: f64,
     /// Проскальзывание в худшую сторону, доля.
     pub slippage: f64,
+    /// Задержка от сигнала до исполнения. 0 = мгновенно (слишком оптимистично).
+    pub latency_ms: u64,
 }
 
 impl Default for SimConfig {
@@ -18,6 +25,7 @@ impl Default for SimConfig {
         Self {
             fee_rate: 0.015,
             slippage: 0.03,
+            latency_ms: 400,
         }
     }
 }
@@ -25,6 +33,7 @@ impl Default for SimConfig {
 pub struct PaperExecutor {
     cfg: SimConfig,
     last_price: HashMap<Mint, f64>,
+    queue: VecDeque<(u64, Intent)>,
 }
 
 impl PaperExecutor {
@@ -32,6 +41,7 @@ impl PaperExecutor {
         Self {
             cfg,
             last_price: HashMap::new(),
+            queue: VecDeque::new(),
         }
     }
 
@@ -48,6 +58,21 @@ impl PaperExecutor {
             }
             _ => {}
         }
+    }
+
+    /// Ставит ордер в очередь; исполнится в `poll`, когда пройдёт задержка.
+    pub fn submit(&mut self, intent: Intent, now_ms: u64) {
+        self.queue.push_back((now_ms + self.cfg.latency_ms, intent));
+    }
+
+    /// Исполняет созревшие ордера. `None` = исполнить не удалось (нет цены или позиции).
+    pub fn poll(&mut self, now_ms: u64, portfolio: &Portfolio) -> Vec<(Intent, Option<Fill>)> {
+        let mut out = Vec::new();
+        while let Some((_, intent)) = self.queue.pop_front_if(|(due, _)| *due <= now_ms) {
+            let fill = self.fill(&intent, portfolio, now_ms);
+            out.push((intent, fill));
+        }
+        out
     }
 
     pub fn fill(&self, intent: &Intent, portfolio: &Portfolio, ts_ms: u64) -> Option<Fill> {
@@ -77,5 +102,79 @@ impl PaperExecutor {
             }
             _ => None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nail_core::{Create, Pool, Trade};
+
+    fn create(block: u64) -> Event {
+        Event::Create(Create {
+            signature: String::new(),
+            mint: "M".into(),
+            pool: Pool::Pump,
+            creator: "dev".into(),
+            name: String::new(),
+            symbol: String::new(),
+            risky: false,
+            block,
+            ts_ms: 0,
+        })
+    }
+
+    fn buy(who: &str, price: f64, block: u64) -> Event {
+        Event::Trade(Trade {
+            signature: String::new(),
+            mint: "M".into(),
+            pool: Pool::Pump,
+            side: Side::Buy,
+            trader: who.into(),
+            traders: vec![],
+            token_amount: 1.0,
+            sol_amount: 2.0,
+            price,
+            market_cap_sol: 0.0,
+            risky: false,
+            block,
+            ts_ms: 0,
+        })
+    }
+
+    #[test]
+    fn order_fills_after_latency_at_the_later_price() {
+        let mut sim = PaperExecutor::new(SimConfig {
+            fee_rate: 0.0,
+            slippage: 0.0,
+            latency_ms: 400,
+        });
+        let pf = Portfolio::default();
+        sim.observe(&buy("x", 1.0, 1));
+        let intent = Intent {
+            strategy: "t",
+            mint: "M".into(),
+            side: Side::Buy,
+            amount: Amount::Sol(1.0),
+            reason: String::new(),
+        };
+        sim.submit(intent, 1_000);
+        assert!(sim.poll(1_399, &pf).is_empty());
+        sim.observe(&buy("x", 2.0, 2));
+        let fills = sim.poll(1_400, &pf);
+        assert_eq!(fills[0].1.as_ref().map(|f| f.token_amount), Some(0.5));
+    }
+
+    #[test]
+    fn race_buckets_skip_dev_buy() {
+        let mut r = RaceStats::default();
+        r.observe(&create(100));
+        r.observe(&buy("dev", 1.0, 100));
+        r.observe(&buy("a", 1.0, 100));
+        r.observe(&buy("b", 1.0, 101));
+        r.observe(&buy("c", 1.0, 104));
+        r.observe(&buy("d", 1.0, 500));
+        assert_eq!(r.buckets.map(|b| b.0), [1, 1, 0, 1, 0]);
+        assert_eq!(r.buckets[0].1, 2.0);
     }
 }

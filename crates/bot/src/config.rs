@@ -42,6 +42,7 @@ struct Exec {
 struct Sim {
     fee_rate: Option<f64>,
     slippage: Option<f64>,
+    latency_ms: Option<u64>,
 }
 
 #[derive(Deserialize, Default)]
@@ -60,6 +61,7 @@ struct Exits {
     stop_loss_pct: Option<f64>,
     trailing_stop_pct: Option<f64>,
     max_hold_ms: Option<u64>,
+    exit_on_dev_sell: Option<bool>,
 }
 
 #[derive(Deserialize, Default)]
@@ -120,6 +122,7 @@ impl Config {
         SimConfig {
             fee_rate: self.sim.fee_rate.unwrap_or(d.fee_rate),
             slippage: self.sim.slippage.unwrap_or(d.slippage),
+            latency_ms: self.sim.latency_ms.unwrap_or(d.latency_ms),
         }
     }
 
@@ -162,6 +165,7 @@ impl Config {
             stop_loss_pct: e.stop_loss_pct.unwrap_or(d.stop_loss_pct),
             trailing_stop_pct: e.trailing_stop_pct,
             max_hold_ms: e.max_hold_ms.unwrap_or(d.max_hold_ms),
+            exit_on_dev_sell: e.exit_on_dev_sell.unwrap_or(d.exit_on_dev_sell),
         };
         let (r, d) = (&self.risk, RiskConfig::default());
         let risk = RiskConfig {

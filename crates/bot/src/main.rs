@@ -1,14 +1,12 @@
 //! rusted_nail [config.toml] [--live]
 //! По умолчанию paper-режим: живой стрим, виртуальные сделки. Реальные деньги только с --live.
 
-mod config;
-
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result};
+use nail_bot::{config, paper_step};
 use nail_core::{Event, Fill, Intent};
-use nail_engine::Engine;
 use nail_exec::PumpApiClient;
 use nail_sim::PaperExecutor;
 use tokio::sync::mpsc;
@@ -36,8 +34,7 @@ fn now_ms() -> u64 {
         .map_or(0, |d| d.as_millis() as u64)
 }
 
-fn report_fill(engine: &mut Engine, intent_reason: &str, fill: &Fill) {
-    let pnl = engine.on_fill(fill);
+fn log_fill(reason: &str, fill: &Fill, pnl: Option<f64>) {
     println!(
         "[fill] {:?} {} tokens={:.0} sol={:.5} pnl={} | {}",
         fill.side,
@@ -45,7 +42,7 @@ fn report_fill(engine: &mut Engine, intent_reason: &str, fill: &Fill) {
         fill.token_amount,
         fill.sol_amount,
         pnl.map_or("-".into(), |p| format!("{p:+.5}")),
-        intent_reason
+        reason
     );
 }
 
@@ -112,30 +109,29 @@ async fn main() -> Result<()> {
                 lag_sum += lag;
                 lag_max = lag_max.max(lag);
                 lag_n += 1;
-                sim.observe(&ev);
-
-                // В боевом режиме исполнение подтверждается нашей же сделкой из стрима.
-                // TODO: брать точные суммы с комиссиями из preBalances/postBalances.
-                if let (Some(l), Event::Trade(t)) = (&live, &ev) {
-                    if t.trader == l.wallet && engine.is_pending(&t.mint) {
-                        let fill = Fill {
-                            mint: t.mint.clone(),
-                            side: t.side,
-                            token_amount: t.token_amount,
-                            sol_amount: t.sol_amount,
-                            ts_ms: t.ts_ms,
-                        };
-                        report_fill(&mut engine, "confirmed on stream", &fill);
-                    }
-                }
-
-                for intent in engine.on_event(&ev) {
-                    match &live {
-                        None => match sim.fill(&intent, &engine.portfolio, ev.ts_ms()) {
-                            Some(fill) => report_fill(&mut engine, &intent.reason, &fill),
-                            None => engine.on_reject(&intent.mint),
-                        },
-                        Some(l) => submit(l.client.clone(), intent, ex_tx.clone()),
+                match &live {
+                    None => paper_step(&mut engine, &mut sim, &ev, |i, f, pnl| {
+                        log_fill(&i.reason, f, pnl);
+                    }),
+                    Some(l) => {
+                        // Исполнение подтверждается нашей же сделкой из стрима.
+                        // TODO: брать точные суммы с комиссиями из preBalances/postBalances.
+                        if let Event::Trade(t) = &ev {
+                            if t.trader == l.wallet && engine.is_pending(&t.mint) {
+                                let fill = Fill {
+                                    mint: t.mint.clone(),
+                                    side: t.side,
+                                    token_amount: t.token_amount,
+                                    sol_amount: t.sol_amount,
+                                    ts_ms: t.ts_ms,
+                                };
+                                let pnl = engine.on_fill(&fill);
+                                log_fill("confirmed on stream", &fill, pnl);
+                            }
+                        }
+                        for intent in engine.on_event(&ev) {
+                            submit(l.client.clone(), intent, ex_tx.clone());
+                        }
                     }
                 }
             }

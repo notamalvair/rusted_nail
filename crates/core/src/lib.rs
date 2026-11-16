@@ -39,6 +39,8 @@ pub struct Trade {
     /// SOL за токен после сделки.
     pub price: f64,
     pub market_cap_sol: f64,
+    /// Токен с признаками ловушки: freeze/mint authority или комиссия на перевод.
+    pub risky: bool,
     pub block: u64,
     pub ts_ms: u64,
 }
@@ -57,6 +59,7 @@ pub struct Create {
     pub creator: Wallet,
     pub name: String,
     pub symbol: String,
+    pub risky: bool,
     pub block: u64,
     pub ts_ms: u64,
 }
@@ -81,6 +84,13 @@ impl Event {
             Event::Trade(t) => t.ts_ms,
             Event::Create(c) => c.ts_ms,
             Event::Migrate(m) => m.ts_ms,
+        }
+    }
+    pub fn risky(&self) -> bool {
+        match self {
+            Event::Trade(t) => t.risky,
+            Event::Create(c) => c.risky,
+            Event::Migrate(_) => false,
         }
     }
     pub fn mint(&self) -> &str {
