@@ -83,7 +83,7 @@ fn snapshot(
             closing: engine.is_pending(mint),
         })
         .collect();
-    positions.sort_by(|a, b| a.age_s.cmp(&b.age_s));
+    positions.sort_by_key(|p| p.age_s);
     Snapshot {
         live,
         events,
