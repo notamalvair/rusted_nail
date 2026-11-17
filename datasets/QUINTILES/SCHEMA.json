@@ -1,0 +1,334 @@
+{
+  "schema_version": "quintile-catalog-v1",
+  "tables": {
+    "catalog_run": {
+      "columns": [
+        {
+          "name": "run_id",
+          "type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "policy_version",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "created_at_utc",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true
+        },
+        {
+          "name": "duckdb_version",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "source_status",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "source_events",
+          "type": "UBIGINT",
+          "nullable": true
+        },
+        {
+          "name": "source_legs",
+          "type": "UBIGINT",
+          "nullable": true
+        },
+        {
+          "name": "source_parquet_bytes",
+          "type": "UBIGINT",
+          "nullable": true
+        },
+        {
+          "name": "dates_json",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "full_source_validation_performed",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "quantile_method",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "min_valid_count",
+          "type": "UBIGINT",
+          "nullable": true
+        },
+        {
+          "name": "note",
+          "type": "VARCHAR",
+          "nullable": true
+        }
+      ],
+      "rows": 1
+    },
+    "metric_definition": {
+      "columns": [
+        {
+          "name": "layer",
+          "type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "metric_name",
+          "type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "column_name",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "source_field",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "applicable_actions_json",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "unit_kind",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "split_by_quote_mint",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "description",
+          "type": "VARCHAR",
+          "nullable": true
+        }
+      ],
+      "rows": 22
+    },
+    "metric_distribution": {
+      "columns": [
+        {
+          "name": "run_id",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "layer",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "metric_name",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "scope",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "sample_day",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "action",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "parent_action",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "protocol",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "quote_mint",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "unit_kind",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "population_policy",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "n_rows",
+          "type": "UBIGINT",
+          "nullable": true
+        },
+        {
+          "name": "n_text_null",
+          "type": "UBIGINT",
+          "nullable": true
+        },
+        {
+          "name": "n_cast_failed_or_nonfinite",
+          "type": "UBIGINT",
+          "nullable": true
+        },
+        {
+          "name": "n_negative",
+          "type": "UBIGINT",
+          "nullable": true
+        },
+        {
+          "name": "n_zero",
+          "type": "UBIGINT",
+          "nullable": true
+        },
+        {
+          "name": "n_valid",
+          "type": "UBIGINT",
+          "nullable": true
+        },
+        {
+          "name": "min_value",
+          "type": "DOUBLE",
+          "nullable": true
+        },
+        {
+          "name": "p01",
+          "type": "DOUBLE",
+          "nullable": true
+        },
+        {
+          "name": "p20",
+          "type": "DOUBLE",
+          "nullable": true
+        },
+        {
+          "name": "p40",
+          "type": "DOUBLE",
+          "nullable": true
+        },
+        {
+          "name": "p60",
+          "type": "DOUBLE",
+          "nullable": true
+        },
+        {
+          "name": "p80",
+          "type": "DOUBLE",
+          "nullable": true
+        },
+        {
+          "name": "p99",
+          "type": "DOUBLE",
+          "nullable": true
+        },
+        {
+          "name": "max_value",
+          "type": "DOUBLE",
+          "nullable": true
+        },
+        {
+          "name": "quintiles_eligible",
+          "type": "BOOLEAN",
+          "nullable": true
+        },
+        {
+          "name": "ineligible_reason",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "quantile_method",
+          "type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "inherited_source_status",
+          "type": "VARCHAR",
+          "nullable": true
+        }
+      ],
+      "rows": 38369
+    }
+  },
+  "enums": {
+    "layer": [
+      "event_leg",
+      "parent_event"
+    ],
+    "scope": [
+      "ACTION",
+      "ACTION_PROTOCOL",
+      "DAY_ACTION_PROTOCOL"
+    ],
+    "action": [
+      "add",
+      "buy",
+      "create",
+      "migrate",
+      "remove",
+      "sell"
+    ],
+    "protocol": [
+      "pump",
+      "pump-amm"
+    ]
+  },
+  "distribution_key": [
+    "run_id",
+    "layer",
+    "metric_name",
+    "scope",
+    "sample_day",
+    "action",
+    "parent_action",
+    "protocol",
+    "quote_mint"
+  ],
+  "scope_null_rules": {
+    "DAY_ACTION_PROTOCOL": {
+      "sample_day": "required",
+      "protocol": "required"
+    },
+    "ACTION_PROTOCOL": {
+      "sample_day": "null",
+      "protocol": "required"
+    },
+    "ACTION": {
+      "sample_day": "null",
+      "protocol": "null"
+    }
+  },
+  "quote_mint_rule": "required and non-null for metric_definition.split_by_quote_mint=true; expected null otherwise",
+  "eligibility_rule": "n_valid >= 1000 AND p20 < p40 < p60 < p80, plus quote_mint present for split metrics",
+  "accounting_invariant": "n_rows = n_text_null + n_cast_failed_or_nonfinite + n_negative + n_valid",
+  "fallback_order": [
+    "DAY_ACTION_PROTOCOL",
+    "ACTION_PROTOCOL",
+    "ACTION"
+  ],
+  "quintile_rule": {
+    "invalid": "NULL/nonfinite/negative -> null",
+    "Q1": "value <= p20",
+    "Q2": "p20 < value <= p40",
+    "Q3": "p40 < value <= p60",
+    "Q4": "p60 < value <= p80",
+    "Q5": "value > p80"
+  }
+}

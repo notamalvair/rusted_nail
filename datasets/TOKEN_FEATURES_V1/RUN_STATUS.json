@@ -1,0 +1,74 @@
+{
+  "status": "written",
+  "version": "pump-create-features-v1",
+  "started_at_utc": "2026-11-17T13:21:42.212758+00:00",
+  "completed_dates": [
+    "2026-11-02",
+    "2026-11-09",
+    "2026-11-16"
+  ],
+  "current_date": "2026-11-16",
+  "elapsed_seconds": 456.5,
+  "results": [
+    {
+      "date": "2026-11-02",
+      "all_pump_creates": 2505,
+      "included_wsol_creates": 1966,
+      "features": 1966,
+      "audit": 2505,
+      "outcomes": 37213,
+      "excluded_reasons": [
+        [
+          "included",
+          1966
+        ],
+        [
+          "non_wsol_quote",
+          539
+        ]
+      ],
+      "date_max_provider_ms": 1793617199994,
+      "date_max_event_ms": 1793617199994
+    },
+    {
+      "date": "2026-11-09",
+      "all_pump_creates": 2557,
+      "included_wsol_creates": 2044,
+      "features": 2044,
+      "audit": 2557,
+      "outcomes": 38653,
+      "excluded_reasons": [
+        [
+          "included",
+          2044
+        ],
+        [
+          "non_wsol_quote",
+          513
+        ]
+      ],
+      "date_max_provider_ms": 1794221999999,
+      "date_max_event_ms": 1794221999998
+    },
+    {
+      "date": "2026-11-16",
+      "all_pump_creates": 2305,
+      "included_wsol_creates": 2050,
+      "features": 2050,
+      "audit": 2305,
+      "outcomes": 38768,
+      "excluded_reasons": [
+        [
+          "included",
+          2050
+        ],
+        [
+          "non_wsol_quote",
+          255
+        ]
+      ],
+      "date_max_provider_ms": 1794826799988,
+      "date_max_event_ms": 1794826799986
+    }
+  ]
+}

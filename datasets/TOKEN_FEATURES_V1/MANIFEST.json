@@ -1,0 +1,113 @@
+{
+  "package": "PumpAPI Pump+WSOL Create Feature Dataset",
+  "dataset_version": "pump-create-features-v1",
+  "entrypoint": "START_HERE.md",
+  "source_status": "written_unvalidated",
+  "compact_output_status": "passed",
+  "files": [
+    {
+      "path": "pump_create_features_v1.parquet",
+      "bytes": 6071529,
+      "sha256": "018f5a3c2d4ac4cf29f8cfd47817f1a4fafd58b39e6e85e6f81dd7d5d8b31b3a",
+      "role": "causal feature table",
+      "required": true
+    },
+    {
+      "path": "pump_create_outcomes_v1.parquet",
+      "bytes": 2238290,
+      "sha256": "7cca58fded4ca1a35fa43b33898a8f839fc9d6749a085c3352d9100a5072974a",
+      "role": "separate future label table",
+      "required": true
+    },
+    {
+      "path": "pump_create_audit_v1.parquet",
+      "bytes": 1062325,
+      "sha256": "ea74f4121ffbafce9a26be0dcc9650148e05ae4bd7dd89de181b8e75bdfc7542",
+      "role": "all create occurrences and exclusions",
+      "required": true
+    },
+    {
+      "path": "START_HERE.md",
+      "bytes": 3378,
+      "sha256": "94d276f72325f4642d02397ee79b35563f93d16bb618a4503ceb83cf65d60ac1",
+      "role": "Claude entrypoint",
+      "required": true
+    },
+    {
+      "path": "FEATURE_DICTIONARY.md",
+      "bytes": 4247,
+      "sha256": "aabe21a880f06991d1e2ba46903286a3e57f885f80accbb35f2b5cd225be2227",
+      "role": "feature semantics",
+      "required": true
+    },
+    {
+      "path": "OUTCOME_CONTRACT.md",
+      "bytes": 3463,
+      "sha256": "a47a89f44868fcc4e867231840bfc029f8603494efcfc721d2e229ca5216ece9",
+      "role": "label contract",
+      "required": true
+    },
+    {
+      "path": "PROVENANCE_LIMITATIONS.md",
+      "bytes": 3970,
+      "sha256": "65acd4fbb2d3adf801860a8752ad6b08a3247c72356b27ca7d52f374a6d95cf2",
+      "role": "source and limits",
+      "required": true
+    },
+    {
+      "path": "SCHEMA.json",
+      "bytes": 40358,
+      "sha256": "6a8286ca30d01e993cdff27c80401778b4c5f3632717cea6333805c46cf4f823",
+      "role": "machine Arrow schemas",
+      "required": true
+    },
+    {
+      "path": "DATASET_CONTRACT.json",
+      "bytes": 1777,
+      "sha256": "485358b0c170b0e8b9ae1efdb5a30909624b68f9fb43febbca2303ef397c0249",
+      "role": "machine causal contract",
+      "required": true
+    },
+    {
+      "path": "BUILD_REPORT.md",
+      "bytes": 2382,
+      "sha256": "ab91e69d72c0ab7809ab1a92bed526896e9bc9b09cafbc7ff55e6588ee8ea35d",
+      "role": "compact-output checks",
+      "required": true
+    },
+    {
+      "path": "README_RU.md",
+      "bytes": 1177,
+      "sha256": "03366d79f3e29d4fa9e256f32eead57862c102c1d33cebd0e4963d64035b9109",
+      "role": "Russian overview",
+      "required": true
+    },
+    {
+      "path": "RUN_STATUS.json",
+      "bytes": 1623,
+      "sha256": "f3c73351f242076e2f0e3826c1562f4bd0e99598144810500a25fce690a7de71",
+      "role": "build execution status",
+      "required": true
+    },
+    {
+      "path": "provenance/build_token_features_v1.py",
+      "bytes": 36597,
+      "sha256": "a64b2f2634eb4a0056ec64a2d625935d76c17f540f201a61703d939f24d8e8ad",
+      "role": "audit builder source",
+      "required": true
+    },
+    {
+      "path": "provenance/README.md",
+      "bytes": 205,
+      "sha256": "d18e6c1c6233e100443f992373fd4430c60e30038e99677760e2fdad7c30f347",
+      "role": "algorithm provenance note",
+      "required": true
+    }
+  ],
+  "excluded_from_package": [
+    "working/",
+    "pump_create_features_v1.integer_migration_backup_*.parquet",
+    "neighbor TOKEN_FEATURES_V1_FLAWED_* and INCOMPLETE_* folders"
+  ],
+  "manifest_hash_policy": "MANIFEST.json excluded from own hash set"
+}

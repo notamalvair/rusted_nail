@@ -1,0 +1,50 @@
+{
+  "dataset_version": "pump-create-features-v1",
+  "cohort": {
+    "action": "create",
+    "protocol": "pump",
+    "quote_mint": "So11111111111111111111111111111111111111112",
+    "row_unit": "one create occurrence",
+    "deduplication": "none; ranks and audit retained"
+  },
+  "splits": {
+    "train": "2026-11-02",
+    "validation": "2026-11-09",
+    "test": "2026-11-16"
+  },
+  "feature_time": {
+    "anchor": "create.provider_received_ms",
+    "windows_seconds": [5, 15, 30, 60, 120],
+    "interval": "strictly after create receipt and at or before cutoff",
+    "censored_policy": "feature_window_observed=false and all window fields NULL"
+  },
+  "outcome_time": {
+    "cutoffs_seconds": [5, 15, 30, 60, 120],
+    "horizons_seconds": [30, 60, 120, 300, 900],
+    "requirement": "horizon > cutoff",
+    "entry_delay_ms": 400,
+    "entry_tolerance_ms": 2000,
+    "endpoint_tolerance_ms": 5000,
+    "path_end": "exact horizon; endpoint tolerance applies only to endpoint"
+  },
+  "cost_proxy": {
+    "fee_fraction_each_side": 0.015,
+    "slippage_fraction": 0.03,
+    "method": "pool-state price proxy, not fill/VWAP"
+  },
+  "join_keys": {
+    "feature_audit": ["create_occurrence_id"],
+    "outcomes": ["create_occurrence_id", "cutoff_s", "horizon_s"]
+  },
+  "required_label_filters": {
+    "endpoint_returns": ["entry_price_found=true", "outcome_window_observed=true", "endpoint_price_found=true"],
+    "path_labels": ["entry_price_found=true", "outcome_window_observed=true"]
+  },
+  "source_status": "written_unvalidated",
+  "warnings": [
+    "Do not replace NULL labels with false or zero.",
+    "Do not combine parent aggregate amounts with event-leg gross amounts.",
+    "Do not tune on test split.",
+    "Price is a pool-state proxy, not proven execution price."
+  ]
+}

@@ -1,0 +1,1653 @@
+{
+  "schema_version": "pump-create-features-v1",
+  "cohort": "create/pump/WSOL occurrences",
+  "feature_windows_seconds": [
+    5,
+    15,
+    30,
+    60,
+    120
+  ],
+  "outcome_horizons_seconds": [
+    30,
+    60,
+    120,
+    300,
+    900
+  ],
+  "files": {
+    "pump_create_features_v1.parquet": {
+      "rows": 6060,
+      "bytes": 6071529,
+      "columns": [
+        {
+          "name": "sample_day",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "dataset_split",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_occurrence_id",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "event_row_id",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "source_archive_sha256",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "source_archive_label",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "source_line",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "raw_payload_sha256",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "tx_signature",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "tx_signer",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "base_mint",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "quote_mint",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_pool_id",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_event_timestamp_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "create_provider_received_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "create_receipt_minus_event_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "token_name",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "token_symbol",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "token_program",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "mint_authority",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "freeze_authority",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "creator_fee_address",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "mayhem_mode",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "cashback_enabled",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "create_breakdown_status",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_breakdown_count",
+          "type": "int32",
+          "nullable": true
+        },
+        {
+          "name": "initial_buy_text",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "initial_buy_value",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "create_price_sol_text",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_price_sol",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "create_market_cap_sol_text",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_market_cap_sol",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "create_reserve_base_text",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_reserve_base",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "create_reserve_quote_text",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_reserve_quote",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "create_curve_virtual_base_text",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_curve_virtual_base",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "create_curve_virtual_quote_text",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_curve_virtual_quote",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "create_pool_fee_text",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_pool_fee_fraction",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "create_network_fee_text",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_network_fee_sol",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "exact_payload_occurrence_rank",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "logical_create_rank",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "is_primary_occurrence",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "initial_buy_leg_count",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "initial_sell_leg_count",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "initial_buy_quote_gross",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "initial_sell_quote_gross",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "initial_buy_token_gross",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "initial_sell_token_gross",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "initial_unique_traders",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "initial_leg_cast_failed_count",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "feature_window_observed_5s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "parent_buy_events_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "parent_sell_events_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "parent_buy_quote_sum_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "parent_sell_quote_sum_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "missing_breakdown_trade_events_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "price_snapshot_count_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "last_price_sol_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "min_price_sol_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "max_price_sol_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_market_cap_sol_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_reserve_base_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_reserve_quote_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_curve_virtual_base_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_curve_virtual_quote_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "pool_count_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "migrated_by_5s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "first_migration_delay_ms_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "price_cast_failed_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "snapshot_age_ms_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "past_return_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "past_max_drawup_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "past_max_drawdown_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_count_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_count_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_parent_events_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_parent_events_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_buyers_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_sellers_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_traders_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_token_gross_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_token_gross_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_quote_gross_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_quote_gross_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_token_cast_failed_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_quote_cast_failed_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "first_trade_delay_ms_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "last_trade_delay_ms_5s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "dev_sell_seen_5s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "leg_net_quote_flow_5s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_detail_complete_5s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "feature_window_observed_15s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "parent_buy_events_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "parent_sell_events_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "parent_buy_quote_sum_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "parent_sell_quote_sum_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "missing_breakdown_trade_events_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "price_snapshot_count_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "last_price_sol_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "min_price_sol_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "max_price_sol_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_market_cap_sol_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_reserve_base_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_reserve_quote_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_curve_virtual_base_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_curve_virtual_quote_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "pool_count_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "migrated_by_15s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "first_migration_delay_ms_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "price_cast_failed_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "snapshot_age_ms_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "past_return_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "past_max_drawup_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "past_max_drawdown_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_count_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_count_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_parent_events_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_parent_events_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_buyers_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_sellers_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_traders_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_token_gross_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_token_gross_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_quote_gross_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_quote_gross_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_token_cast_failed_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_quote_cast_failed_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "first_trade_delay_ms_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "last_trade_delay_ms_15s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "dev_sell_seen_15s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "leg_net_quote_flow_15s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_detail_complete_15s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "feature_window_observed_30s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "parent_buy_events_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "parent_sell_events_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "parent_buy_quote_sum_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "parent_sell_quote_sum_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "missing_breakdown_trade_events_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "price_snapshot_count_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "last_price_sol_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "min_price_sol_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "max_price_sol_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_market_cap_sol_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_reserve_base_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_reserve_quote_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_curve_virtual_base_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_curve_virtual_quote_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "pool_count_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "migrated_by_30s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "first_migration_delay_ms_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "price_cast_failed_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "snapshot_age_ms_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "past_return_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "past_max_drawup_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "past_max_drawdown_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_count_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_count_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_parent_events_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_parent_events_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_buyers_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_sellers_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_traders_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_token_gross_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_token_gross_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_quote_gross_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_quote_gross_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_token_cast_failed_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_quote_cast_failed_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "first_trade_delay_ms_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "last_trade_delay_ms_30s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "dev_sell_seen_30s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "leg_net_quote_flow_30s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_detail_complete_30s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "feature_window_observed_60s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "parent_buy_events_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "parent_sell_events_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "parent_buy_quote_sum_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "parent_sell_quote_sum_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "missing_breakdown_trade_events_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "price_snapshot_count_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "last_price_sol_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "min_price_sol_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "max_price_sol_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_market_cap_sol_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_reserve_base_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_reserve_quote_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_curve_virtual_base_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_curve_virtual_quote_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "pool_count_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "migrated_by_60s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "first_migration_delay_ms_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "price_cast_failed_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "snapshot_age_ms_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "past_return_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "past_max_drawup_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "past_max_drawdown_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_count_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_count_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_parent_events_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_parent_events_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_buyers_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_sellers_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_traders_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_token_gross_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_token_gross_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_quote_gross_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_quote_gross_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_token_cast_failed_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_quote_cast_failed_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "first_trade_delay_ms_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "last_trade_delay_ms_60s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "dev_sell_seen_60s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "leg_net_quote_flow_60s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_detail_complete_60s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "feature_window_observed_120s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "parent_buy_events_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "parent_sell_events_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "parent_buy_quote_sum_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "parent_sell_quote_sum_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "missing_breakdown_trade_events_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "price_snapshot_count_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "last_price_sol_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "min_price_sol_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "max_price_sol_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_market_cap_sol_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_reserve_base_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_reserve_quote_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_curve_virtual_base_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "last_curve_virtual_quote_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "pool_count_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "migrated_by_120s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "first_migration_delay_ms_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "price_cast_failed_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "snapshot_age_ms_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "past_return_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "past_max_drawup_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "past_max_drawdown_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_count_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_count_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_parent_events_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_parent_events_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_buyers_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_sellers_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "unique_traders_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_token_gross_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_token_gross_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_buy_quote_gross_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_sell_quote_gross_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_token_cast_failed_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "leg_quote_cast_failed_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "first_trade_delay_ms_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "last_trade_delay_ms_120s",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "dev_sell_seen_120s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "leg_net_quote_flow_120s",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_detail_complete_120s",
+          "type": "bool",
+          "nullable": true
+        }
+      ]
+    },
+    "pump_create_outcomes_v1.parquet": {
+      "rows": 114634,
+      "bytes": 2238290,
+      "columns": [
+        {
+          "name": "sample_day",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "dataset_split",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_occurrence_id",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "base_mint",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "quote_mint",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "cutoff_s",
+          "type": "int32",
+          "nullable": true
+        },
+        {
+          "name": "horizon_s",
+          "type": "int32",
+          "nullable": true
+        },
+        {
+          "name": "entry_event_row_id",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "entry_event_timestamp_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "entry_provider_received_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "entry_price_sol",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "entry_delay_after_due_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "entry_price_found",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "outcome_window_observed",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "endpoint_event_timestamp_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "endpoint_price_sol",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "endpoint_price_found",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "gross_return",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "net_roundtrip_proxy",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "mfe_return",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "mae_return",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "first_take_profit_event_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "first_stop_loss_event_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "first_trailing_25_event_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "first_dev_sell_event_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "take_profit_50_hit",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "stop_loss_20_hit",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "trailing_25_hit",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "dev_sell_after_entry",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "rust_max_hold_120_row",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "fee_fraction_each_side",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "slippage_fraction",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "modeled_entry_delay_ms",
+          "type": "int32",
+          "nullable": true
+        },
+        {
+          "name": "entry_tolerance_ms",
+          "type": "int32",
+          "nullable": true
+        },
+        {
+          "name": "endpoint_tolerance_ms",
+          "type": "int32",
+          "nullable": true
+        },
+        {
+          "name": "outcome_method",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "inherited_source_status",
+          "type": "string",
+          "nullable": true
+        }
+      ]
+    },
+    "pump_create_audit_v1.parquet": {
+      "rows": 7367,
+      "bytes": 1062325,
+      "columns": [
+        {
+          "name": "sample_day",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "dataset_split",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_occurrence_id",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "source_archive_sha256",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "source_archive_label",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "source_line",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "raw_payload_sha256",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "base_mint",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "quote_mint",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "pool_id",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "event_timestamp_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "provider_received_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "included_in_cohort",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "exclusion_reason",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "exact_payload_occurrence_rank",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "exact_payload_occurrence_count",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "logical_create_rank",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "logical_create_count",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "is_primary_occurrence",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "breakdown_status",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "breakdown_count",
+          "type": "int32",
+          "nullable": true
+        },
+        {
+          "name": "coverage_5s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "coverage_15s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "coverage_30s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "coverage_60s",
+          "type": "bool",
+          "nullable": true
+        },
+        {
+          "name": "coverage_120s",
+          "type": "bool",
+          "nullable": true
+        }
+      ]
+    }
+  }
+}

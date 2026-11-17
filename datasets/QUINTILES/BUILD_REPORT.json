@@ -1,0 +1,60 @@
+{
+  "status": "passed",
+  "run_id": "pumpapi-3days-20261102-20261116",
+  "policy_version": "quintile-catalog-v1",
+  "source_status": "written_unvalidated",
+  "full_source_validation_performed": false,
+  "quantile_method": "DuckDB approx_quantile over TRY_CAST(decimal_text AS DOUBLE)",
+  "threshold_rows": 38369,
+  "eligible_threshold_rows": 1127,
+  "metrics": 22,
+  "distinct_quote_mints": 792,
+  "checks": {
+    "catalog_run.parquet": {
+      "database_rows": 1,
+      "parquet_rows": 1,
+      "db_minus_parquet": 0,
+      "parquet_minus_db": 0,
+      "bytes": 2868,
+      "passed": true
+    },
+    "metric_definitions.parquet": {
+      "database_rows": 22,
+      "parquet_rows": 22,
+      "db_minus_parquet": 0,
+      "parquet_minus_db": 0,
+      "bytes": 3248,
+      "passed": true
+    },
+    "quintile_thresholds.parquet": {
+      "database_rows": 38369,
+      "parquet_rows": 38369,
+      "db_minus_parquet": 0,
+      "parquet_minus_db": 0,
+      "bytes": 1164122,
+      "passed": true
+    },
+    "semantic": {
+      "bad_accounting": 0,
+      "bad_eligible": 0,
+      "missing_quote_unit": 0,
+      "bad_monotonic": 0,
+      "passed": true
+    }
+  },
+  "elapsed_seconds_resume": 2.14,
+  "files": {
+    "metric_catalog.duckdb": {
+      "bytes": 4468736
+    },
+    "catalog_run.parquet": {
+      "bytes": 2868
+    },
+    "metric_definitions.parquet": {
+      "bytes": 3248
+    },
+    "quintile_thresholds.parquet": {
+      "bytes": 1164122
+    }
+  }
+}

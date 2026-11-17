@@ -5,3 +5,6 @@ config.toml
 *.jsonl
 *.zst
 /data
+
+# Наборы данных владельца коммитятся
+!datasets/**/*.parquet

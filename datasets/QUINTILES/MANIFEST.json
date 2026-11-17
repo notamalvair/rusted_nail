@@ -1,0 +1,130 @@
+{
+  "package": "PumpAPI Quintile Catalog",
+  "schema_version": "quintile-catalog-v1",
+  "created_from_run": "pumpapi-3days-20261102-20261116",
+  "entrypoint": "START_HERE.md",
+  "source_status": "written_unvalidated",
+  "catalog_status": "passed",
+  "files": [
+    {
+      "path": "metric_catalog.duckdb",
+      "bytes": 5517312,
+      "sha256": "e930e65154066c2ba6969072ba4c1fb75ec45fc4a8bc72d1e0c5390e08d17445",
+      "role": "self-contained DuckDB catalog",
+      "required": true
+    },
+    {
+      "path": "quintile_thresholds.parquet",
+      "bytes": 1164122,
+      "sha256": "070ef7a9279a95a8091aa2f07cfca8365f7608f45b4516883b1a1439219e9af0",
+      "role": "canonical portable thresholds",
+      "required": true
+    },
+    {
+      "path": "metric_definitions.parquet",
+      "bytes": 3248,
+      "sha256": "0d5d3c2afa14b6701f446959e4f3cd36b25c3a481e453f49d37a53ade8e616fc",
+      "role": "metric semantics and units",
+      "required": true
+    },
+    {
+      "path": "catalog_run.parquet",
+      "bytes": 2868,
+      "sha256": "9b91f9b7ea71355b5d405a747967364104dd57825560e7719755e12d06ea9d69",
+      "role": "run provenance",
+      "required": true
+    },
+    {
+      "path": "START_HERE.md",
+      "bytes": 2960,
+      "sha256": "b5c4530280a56133c0db6602117bfa0cfb241c0c62c9bff96d4620922dd3c3a8",
+      "role": "Claude handoff entrypoint",
+      "required": true
+    },
+    {
+      "path": "DATA_DICTIONARY.md",
+      "bytes": 7458,
+      "sha256": "cdad619d135c64388b4e217cbe01d2d058e972e947e909f01bc4d10a8f6a6d87",
+      "role": "human metric dictionary",
+      "required": true
+    },
+    {
+      "path": "USAGE.md",
+      "bytes": 5740,
+      "sha256": "bc1dda75159e7a4db242e3a4bfb4448351784e4ac3df33e788380200b0dca5f5",
+      "role": "SQL Python Rust usage",
+      "required": true
+    },
+    {
+      "path": "PROVENANCE_LIMITATIONS.md",
+      "bytes": 4979,
+      "sha256": "d416e529b4bf049603ea73ab3794c08b1b9c1431c5160c3ac6c5c1f586f1af6a",
+      "role": "source status and limitations",
+      "required": true
+    },
+    {
+      "path": "SCHEMA.json",
+      "bytes": 7590,
+      "sha256": "e06d28915606ce7829f03c44bb177652ad76adaceaf6ec9541569caf9f3c8f52",
+      "role": "machine-readable schemas and rules",
+      "required": true
+    },
+    {
+      "path": "assign_quintile.sql",
+      "bytes": 503,
+      "sha256": "ed423e662fac1f3f4c49870ca3bfe54ad4bf92d539f2fa029b8315056991ea7d",
+      "role": "Q1-Q5 assignment example",
+      "required": true
+    },
+    {
+      "path": "README_RU.md",
+      "bytes": 5595,
+      "sha256": "7625f3381c38fbe9c5b442523ebfc160e1187967b42cf3f25e40a9051eaa9576",
+      "role": "Russian overview",
+      "required": true
+    },
+    {
+      "path": "BUILD_REPORT.json",
+      "bytes": 1515,
+      "sha256": "9c8a71e4a87acd1094fb7983feef97b9f8426452888246ee780f0be04bde8e18",
+      "role": "small-output validation report",
+      "required": true
+    },
+    {
+      "path": "RUN_STATUS.json",
+      "bytes": 913,
+      "sha256": "e65e3bc3658e5545b8d95b60278c925c27a62dbd017dd0e4fb0076a56f3328a6",
+      "role": "execution status and history",
+      "required": true
+    },
+    {
+      "path": "provenance/build_quintile_catalog.py",
+      "bytes": 21250,
+      "sha256": "6e0959eafd59e3b6e2d7c0a68dc85a52fbfd61d19041b9f8233036cb1a009cb6",
+      "role": "audit builder source",
+      "required": true
+    },
+    {
+      "path": "provenance/resume_quintile_catalog_fast.py",
+      "bytes": 13120,
+      "sha256": "13363ec98164dfecc6e3bceffc1aa6b25a76f06ced883d4a495b593ba0656097",
+      "role": "audit optimized resume source",
+      "required": true
+    },
+    {
+      "path": "provenance/finalize_quintile_catalog.py",
+      "bytes": 2115,
+      "sha256": "868155177293a0915cd7c7b9ae78e5f67372c4339b586ba36d034a757e34db9e",
+      "role": "audit compact repair/finalizer",
+      "required": true
+    },
+    {
+      "path": "provenance/README.md",
+      "bytes": 319,
+      "sha256": "59885938cf3d1cfe44fc5a849b714646777c7313c1f8813cf010d60895839e2f",
+      "role": "algorithm provenance note",
+      "required": true
+    }
+  ],
+  "manifest_hash_policy": "MANIFEST.json is intentionally excluded from its own file hash set"
+}
