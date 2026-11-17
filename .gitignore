@@ -8,3 +8,5 @@ config.toml
 
 # Наборы данных владельца коммитятся
 !datasets/**/*.parquet
+__pycache__/
+*.pyc
