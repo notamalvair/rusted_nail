@@ -6,7 +6,7 @@
 use std::time::Duration;
 
 use futures_util::StreamExt;
-use nail_core::{Create, Event, Migrate, Pool, Side, Trade};
+use nail_core::{Create, Event, Migrate, Pool, Side, Trade, WSOL_MINT};
 use serde::Deserialize;
 use tokio::sync::mpsc;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
@@ -21,6 +21,9 @@ struct Wire {
     mint: String,
     pool: String,
     tx_signer: String,
+    quote_mint: String,
+    pool_fee_rate: Option<f64>,
+    quote_in_pool: Option<f64>,
     pool_created_by: Option<String>,
     traders_involved: Option<serde_json::Value>,
     token_amount: Option<f64>,
@@ -66,14 +69,22 @@ fn convert(w: Wire) -> Option<Event> {
         || w.token_extensions
             .as_ref()
             .is_some_and(|e| e.get("transferFeeConfig").is_some());
+    let sol_quote = w.quote_mint == WSOL_MINT;
+    let pool_fee = w.pool_fee_rate.unwrap_or(0.0);
     match w.action.as_str() {
         "buy" | "sell" => {
             let price = w.price_sol.or(w.price)?;
             let token_amount = w.token_amount?;
-            // Объём считаем в SOL, даже если пул котируется в другом токене.
-            let sol_amount = match w.price_sol {
-                Some(p) => token_amount * p,
-                None => w.quote_amount?,
+            // Объём в SOL: для SOL-пулов берём quoteAmount, для остальных пересчёт по priceSol.
+            let sol_amount = match (sol_quote, w.quote_amount, w.price_sol) {
+                (true, Some(q), _) => q,
+                (_, _, Some(p)) => token_amount * p,
+                _ => return None,
+            };
+            let curve_sol = if pool == Pool::Pump && sol_quote {
+                w.quote_in_pool.unwrap_or(0.0)
+            } else {
+                0.0
             };
             Some(Event::Trade(Trade {
                 signature: w.signature,
@@ -90,6 +101,9 @@ fn convert(w: Wire) -> Option<Event> {
                 sol_amount,
                 price,
                 market_cap_sol: w.market_cap_sol.unwrap_or(0.0),
+                sol_quote,
+                pool_fee,
+                curve_sol,
                 risky,
                 block: w.block,
                 ts_ms: w.timestamp,
@@ -102,6 +116,15 @@ fn convert(w: Wire) -> Option<Event> {
             creator: w.pool_created_by.unwrap_or(w.tx_signer),
             name: w.name.unwrap_or_default(),
             symbol: w.symbol.unwrap_or_default(),
+            sol_quote,
+            price: w.price_sol.unwrap_or(0.0),
+            pool_fee,
+            // quoteAmount у события create — покупка создателя в той же транзакции.
+            dev_buy_sol: if sol_quote {
+                w.quote_amount.unwrap_or(0.0)
+            } else {
+                0.0
+            },
             risky,
             block: w.block,
             ts_ms: w.timestamp,
@@ -170,8 +193,10 @@ mod tests {
         let mut out = Vec::new();
         parse(
             br#"{"signature":"s","action":"buy","mint":"M","pool":"pump","txSigner":"W",
+                "quoteMint":"So11111111111111111111111111111111111111112","poolFeeRate":0.0125,
                 "tokenAmount":1000.0,"quoteAmount":0.5,"price":0.0005,"priceSol":0.0005,
-                "marketCapSol":40.0,"tradersInvolved":["W"],"block":1,"timestamp":2,"extra":{}}"#,
+                "quoteInPool":12.5,"marketCapSol":40.0,"tradersInvolved":["W"],"block":1,
+                "timestamp":2,"extra":{}}"#,
             &mut out,
         );
         parse(
@@ -185,7 +210,8 @@ mod tests {
         assert_eq!(out.len(), 1);
         let Event::Trade(t) = &out[0] else { panic!() };
         assert_eq!((t.side, t.sol_amount, t.ts_ms), (Side::Buy, 0.5, 2));
-        assert!(t.involves("W") && !t.risky);
+        assert!(t.involves("W") && !t.risky && t.sol_quote);
+        assert_eq!((t.pool_fee, t.curve_sol), (0.0125, 12.5));
 
         out.clear();
         parse(

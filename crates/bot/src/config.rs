@@ -48,7 +48,8 @@ struct Exec {
 #[derive(Deserialize, Default)]
 #[serde(default, deny_unknown_fields)]
 struct Sim {
-    fee_rate: Option<f64>,
+    api_fee_rate: Option<f64>,
+    default_pool_fee: Option<f64>,
     slippage: Option<f64>,
     latency_ms: Option<u64>,
 }
@@ -60,6 +61,7 @@ struct Risk {
     max_open_positions: Option<usize>,
     max_exposure_sol: Option<f64>,
     daily_loss_limit_sol: Option<f64>,
+    max_pool_fee: Option<f64>,
 }
 
 #[derive(Deserialize, Default)]
@@ -80,6 +82,7 @@ struct SniperSection {
     max_launches_per_creator: Option<u32>,
     creator_window_ms: Option<u64>,
     blacklist: Vec<String>,
+    max_dev_buy_sol: Option<f64>,
 }
 
 #[derive(Deserialize, Default)]
@@ -90,8 +93,9 @@ struct MomentumSection {
     window_ms: Option<u64>,
     min_net_buy_sol: Option<f64>,
     min_unique_buyers: Option<usize>,
-    min_mcap_sol: Option<f64>,
-    max_mcap_sol: Option<f64>,
+    min_buyer_sol: Option<f64>,
+    min_curve_sol: Option<f64>,
+    max_curve_sol: Option<f64>,
     cooldown_ms: Option<u64>,
 }
 
@@ -140,7 +144,8 @@ impl Config {
     pub fn sim(&self) -> SimConfig {
         let d = SimConfig::default();
         SimConfig {
-            fee_rate: self.sim.fee_rate.unwrap_or(d.fee_rate),
+            api_fee_rate: self.sim.api_fee_rate.unwrap_or(d.api_fee_rate),
+            default_pool_fee: self.sim.default_pool_fee.unwrap_or(d.default_pool_fee),
             slippage: self.sim.slippage.unwrap_or(d.slippage),
             latency_ms: self.sim.latency_ms.unwrap_or(d.latency_ms),
         }
@@ -157,6 +162,7 @@ impl Config {
                     .unwrap_or(d.max_launches_per_creator),
                 creator_window_ms: s.creator_window_ms.unwrap_or(d.creator_window_ms),
                 blacklist: s.blacklist.iter().cloned().collect(),
+                max_dev_buy_sol: s.max_dev_buy_sol,
             })));
         }
         if self.momentum.enabled {
@@ -166,8 +172,9 @@ impl Config {
                 window_ms: m.window_ms.unwrap_or(d.window_ms),
                 min_net_buy_sol: m.min_net_buy_sol.unwrap_or(d.min_net_buy_sol),
                 min_unique_buyers: m.min_unique_buyers.unwrap_or(d.min_unique_buyers),
-                min_mcap_sol: m.min_mcap_sol.unwrap_or(d.min_mcap_sol),
-                max_mcap_sol: m.max_mcap_sol.unwrap_or(d.max_mcap_sol),
+                min_buyer_sol: m.min_buyer_sol.unwrap_or(d.min_buyer_sol),
+                min_curve_sol: m.min_curve_sol.unwrap_or(d.min_curve_sol),
+                max_curve_sol: m.max_curve_sol.unwrap_or(d.max_curve_sol),
                 cooldown_ms: m.cooldown_ms.unwrap_or(d.cooldown_ms),
             })));
         }
@@ -193,6 +200,7 @@ impl Config {
             max_open_positions: r.max_open_positions.unwrap_or(d.max_open_positions),
             max_exposure_sol: r.max_exposure_sol.unwrap_or(d.max_exposure_sol),
             daily_loss_limit_sol: r.daily_loss_limit_sol.unwrap_or(d.daily_loss_limit_sol),
+            max_pool_fee: r.max_pool_fee.unwrap_or(d.max_pool_fee),
         };
         Engine::new(strategies, exits, RiskManager::new(risk))
     }

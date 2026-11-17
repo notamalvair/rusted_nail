@@ -12,7 +12,8 @@ slippage = 20.0   # %, как в pumpapi
 priority_fee = 0.0001
 
 [sim]             # paper-режим
-fee_rate = 0.015  # ДОПУЩЕНИЕ: 0.25% pumpapi + комиссия pump.fun, уточнить
+api_fee_rate = 0.0025      # комиссия pumpapi; комиссия пула берётся из событий токена
+default_pool_fee = 0.0125  # если в событиях её нет (на кривой pump.fun медиана 1.25%)
 slippage = 0.03
 latency_ms = 400   # задержка сигнал -> исполнение; 400 = примерно один слот
 
@@ -21,6 +22,7 @@ max_position_sol = 0.05
 max_open_positions = 5
 max_exposure_sol = 0.25
 daily_loss_limit_sol = 0.2
+max_pool_fee = 0.0125      # пулы дороже пропускаем; на кривой бывает до ~4%
 
 [exits]
 take_profit_pct = 0.5
@@ -35,6 +37,7 @@ size_sol = 0.02
 max_launches_per_creator = 1
 creator_window_ms = 86400000
 blacklist = []
+# max_dev_buy_sol = 5.0    # пропуск запусков с крупной покупкой создателя (медиана ~0.3 SOL)
 
 [momentum]
 enabled = true
@@ -42,8 +45,9 @@ size_sol = 0.03
 window_ms = 5000
 min_net_buy_sol = 3.0
 min_unique_buyers = 5
-min_mcap_sol = 35.0
-max_mcap_sol = 200.0
+min_buyer_sol = 0.02       # покупки меньше не считаются уникальными покупателями
+min_curve_sol = 4.0        # реальных SOL в кривой; миграция около 85
+max_curve_sol = 50.0
 cooldown_ms = 60000
 
 [copytrade]

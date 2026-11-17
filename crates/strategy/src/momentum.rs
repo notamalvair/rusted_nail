@@ -11,8 +11,13 @@ pub struct MomentumConfig {
     /// Чистый приток (покупки минус продажи) за окно, SOL.
     pub min_net_buy_sol: f64,
     pub min_unique_buyers: usize,
-    pub min_mcap_sol: f64,
-    pub max_mcap_sol: f64,
+    /// Покупатель считается уникальным, только если купил хотя бы на столько SOL.
+    /// Отсекает пыль от bump-ботов (около 20% покупок на кривой — 0.01 SOL и меньше).
+    pub min_buyer_sol: f64,
+    /// Окно по реальным SOL в кривой (миграция около 85). Капитализацию не используем:
+    /// у токенов с supply 2 млрд она вдвое выше при той же цене.
+    pub min_curve_sol: f64,
+    pub max_curve_sol: f64,
     /// Пауза между сигналами по одному токену.
     pub cooldown_ms: u64,
 }
@@ -24,8 +29,9 @@ impl Default for MomentumConfig {
             window_ms: 5_000,
             min_net_buy_sol: 3.0,
             min_unique_buyers: 5,
-            min_mcap_sol: 35.0,
-            max_mcap_sol: 200.0,
+            min_buyer_sol: 0.02,
+            min_curve_sol: 4.0,
+            max_curve_sol: 50.0,
             cooldown_ms: 60_000,
         }
     }
@@ -64,7 +70,7 @@ impl Strategy for Momentum {
 
     fn on_event(&mut self, ev: &Event) -> Option<Intent> {
         let Event::Trade(t) = ev else { return None };
-        if t.pool != Pool::Pump {
+        if t.pool != Pool::Pump || !t.sol_quote {
             return None;
         }
         let now = t.ts_ms;
@@ -90,17 +96,18 @@ impl Strategy for Momentum {
 
         if t.side != Side::Buy
             || w.net_sol < self.cfg.min_net_buy_sol
-            || t.market_cap_sol < self.cfg.min_mcap_sol
-            || t.market_cap_sol > self.cfg.max_mcap_sol
+            || t.curve_sol < self.cfg.min_curve_sol
+            || t.curve_sol > self.cfg.max_curve_sol
             || w.last_signal_ms
                 .is_some_and(|l| now.saturating_sub(l) < self.cfg.cooldown_ms)
         {
             return None;
         }
+        let min_buyer = self.cfg.min_buyer_sol;
         let buyers: HashSet<&str> = w
             .trades
             .iter()
-            .filter(|x| x.1 > 0.0)
+            .filter(|x| x.1 >= min_buyer)
             .map(|x| x.2.as_str())
             .collect();
         if buyers.len() < self.cfg.min_unique_buyers {
@@ -113,11 +120,11 @@ impl Strategy for Momentum {
             side: Side::Buy,
             amount: Amount::Sol(self.cfg.size_sol),
             reason: format!(
-                "net +{:.2} SOL / {} buyers in {} ms, mcap {:.0} SOL",
+                "net +{:.2} SOL / {} buyers in {} ms, curve {:.1} SOL",
                 w.net_sol,
                 buyers.len(),
                 self.cfg.window_ms,
-                t.market_cap_sol
+                t.curve_sol
             ),
         })
     }

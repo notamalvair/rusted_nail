@@ -9,6 +9,8 @@ pub struct RiskConfig {
     pub max_exposure_sol: f64,
     /// Дневной убыток (UTC), после которого покупки останавливаются до следующего дня.
     pub daily_loss_limit_sol: f64,
+    /// Не входить в пулы с комиссией выше (доля). На кривой pump.fun обычно 1.25%, бывает до ~4%.
+    pub max_pool_fee: f64,
 }
 
 impl Default for RiskConfig {
@@ -18,6 +20,7 @@ impl Default for RiskConfig {
             max_open_positions: 5,
             max_exposure_sol: 0.25,
             daily_loss_limit_sol: 0.2,
+            max_pool_fee: 0.0125,
         }
     }
 }
@@ -68,6 +71,10 @@ impl RiskManager {
     /// Ручной аварийный стоп: покупки запрещены, пока не снят.
     pub fn set_kill_switch(&mut self, on: bool) {
         self.kill_switch = on;
+    }
+
+    pub fn max_pool_fee(&self) -> f64 {
+        self.cfg.max_pool_fee
     }
 
     pub fn kill_switch(&self) -> bool {

@@ -8,6 +8,12 @@ pub type Wallet = String;
 /// Стартовая цена на bonding curve pump.fun (30 виртуальных SOL / 1.073e9 токенов).
 pub const PUMP_INITIAL_PRICE_SOL: f64 = 2.795899348462258e-8;
 
+/// Wrapped SOL: quote mint пулов, котируемых в SOL.
+pub const WSOL_MINT: &str = "So11111111111111111111111111111111111111112";
+
+/// Реальных SOL в кривой pump.fun к моменту миграции (по данным ~85).
+pub const PUMP_GRADUATION_SOL: f64 = 85.0;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Side {
     Buy,
@@ -38,7 +44,14 @@ pub struct Trade {
     pub sol_amount: f64,
     /// SOL за токен после сделки.
     pub price: f64,
+    /// Капитализация в SOL. Между токенами не сравнивать: supply бывает 1 и 2 млрд.
     pub market_cap_sol: f64,
+    /// Пул котируется в SOL (около 14% сделок на кривой идут в других quote mint).
+    pub sol_quote: bool,
+    /// Комиссия пула, доля (0.0125 = 1.25%). 0 = неизвестна.
+    pub pool_fee: f64,
+    /// Реальных SOL в кривой pump.fun (прогресс до миграции); 0 вне кривой или не в SOL.
+    pub curve_sol: f64,
     /// Токен с признаками ловушки: freeze/mint authority или комиссия на перевод.
     pub risky: bool,
     pub block: u64,
@@ -59,6 +72,12 @@ pub struct Create {
     pub creator: Wallet,
     pub name: String,
     pub symbol: String,
+    pub sol_quote: bool,
+    /// Цена после создания (с учётом dev buy), SOL за токен; 0 = неизвестна.
+    pub price: f64,
+    pub pool_fee: f64,
+    /// Покупка создателя в транзакции создания, SOL (только для SOL-пулов).
+    pub dev_buy_sol: f64,
     pub risky: bool,
     pub block: u64,
     pub ts_ms: u64,
@@ -91,6 +110,14 @@ impl Event {
             Event::Trade(t) => t.risky,
             Event::Create(c) => c.risky,
             Event::Migrate(_) => false,
+        }
+    }
+    /// Комиссия пула из события; 0 = неизвестна.
+    pub fn pool_fee(&self) -> f64 {
+        match self {
+            Event::Trade(t) => t.pool_fee,
+            Event::Create(c) => c.pool_fee,
+            Event::Migrate(_) => 0.0,
         }
     }
     pub fn mint(&self) -> &str {

@@ -12,8 +12,10 @@ use nail_core::{Amount, Event, Fill, Intent, Mint, Portfolio, Side, PUMP_INITIAL
 
 #[derive(Clone, Debug)]
 pub struct SimConfig {
-    /// Суммарная комиссия с оборота на одну сделку (pumpapi + pump.fun).
-    pub fee_rate: f64,
+    /// Комиссия pumpapi с оборота (0.25%). Комиссия пула берётся из событий токена.
+    pub api_fee_rate: f64,
+    /// Комиссия пула, если в событиях её нет (на кривой pump.fun обычно 1.25%).
+    pub default_pool_fee: f64,
     /// Проскальзывание в худшую сторону, доля.
     pub slippage: f64,
     /// Задержка от сигнала до исполнения. 0 = мгновенно (слишком оптимистично).
@@ -23,7 +25,8 @@ pub struct SimConfig {
 impl Default for SimConfig {
     fn default() -> Self {
         Self {
-            fee_rate: 0.015,
+            api_fee_rate: 0.0025,
+            default_pool_fee: 0.0125,
             slippage: 0.03,
             latency_ms: 400,
         }
@@ -32,7 +35,8 @@ impl Default for SimConfig {
 
 pub struct PaperExecutor {
     cfg: SimConfig,
-    last_price: HashMap<Mint, f64>,
+    /// Последние цена и комиссия пула по токену.
+    last: HashMap<Mint, (f64, f64)>,
     queue: VecDeque<(u64, Intent)>,
 }
 
@@ -40,21 +44,33 @@ impl PaperExecutor {
     pub fn new(cfg: SimConfig) -> Self {
         Self {
             cfg,
-            last_price: HashMap::new(),
+            last: HashMap::new(),
             queue: VecDeque::new(),
         }
     }
 
     /// Вызывать на каждое событие до `fill`.
     pub fn observe(&mut self, ev: &Event) {
+        let fee = |f: f64| {
+            if f > 0.0 {
+                f
+            } else {
+                self.cfg.default_pool_fee
+            }
+        };
         match ev {
             Event::Trade(t) if t.price > 0.0 => {
-                self.last_price.insert(t.mint.clone(), t.price);
+                self.last.insert(t.mint.clone(), (t.price, fee(t.pool_fee)));
             }
             Event::Create(c) => {
-                self.last_price
+                let price = if c.price > 0.0 {
+                    c.price
+                } else {
+                    PUMP_INITIAL_PRICE_SOL
+                };
+                self.last
                     .entry(c.mint.clone())
-                    .or_insert(PUMP_INITIAL_PRICE_SOL);
+                    .or_insert((price, fee(c.pool_fee)));
             }
             _ => {}
         }
@@ -76,10 +92,11 @@ impl PaperExecutor {
     }
 
     pub fn fill(&self, intent: &Intent, portfolio: &Portfolio, ts_ms: u64) -> Option<Fill> {
-        let px = *self.last_price.get(&intent.mint)?;
+        let (px, pool_fee) = *self.last.get(&intent.mint)?;
+        let fee = pool_fee + self.cfg.api_fee_rate;
         match (intent.side, intent.amount) {
             (Side::Buy, Amount::Sol(sol)) => {
-                let tokens = sol * (1.0 - self.cfg.fee_rate) / (px * (1.0 + self.cfg.slippage));
+                let tokens = sol * (1.0 - fee) / (px * (1.0 + self.cfg.slippage));
                 Some(Fill {
                     mint: intent.mint.clone(),
                     side: Side::Buy,
@@ -91,7 +108,7 @@ impl PaperExecutor {
             (Side::Sell, Amount::Fraction(f)) => {
                 let pos = portfolio.positions.get(&intent.mint)?;
                 let tokens = pos.tokens * f.clamp(0.0, 1.0);
-                let sol = tokens * px * (1.0 - self.cfg.slippage) * (1.0 - self.cfg.fee_rate);
+                let sol = tokens * px * (1.0 - self.cfg.slippage) * (1.0 - fee);
                 Some(Fill {
                     mint: intent.mint.clone(),
                     side: Side::Sell,
@@ -118,6 +135,10 @@ mod tests {
             creator: "dev".into(),
             name: String::new(),
             symbol: String::new(),
+            sol_quote: true,
+            price: 0.0,
+            pool_fee: 0.0,
+            dev_buy_sol: 0.0,
             risky: false,
             block,
             ts_ms: 0,
@@ -136,6 +157,9 @@ mod tests {
             sol_amount: 2.0,
             price,
             market_cap_sol: 0.0,
+            sol_quote: true,
+            pool_fee: 0.0,
+            curve_sol: 0.0,
             risky: false,
             block,
             ts_ms: 0,
@@ -145,7 +169,8 @@ mod tests {
     #[test]
     fn order_fills_after_latency_at_the_later_price() {
         let mut sim = PaperExecutor::new(SimConfig {
-            fee_rate: 0.0,
+            api_fee_rate: 0.0,
+            default_pool_fee: 0.0,
             slippage: 0.0,
             latency_ms: 400,
         });

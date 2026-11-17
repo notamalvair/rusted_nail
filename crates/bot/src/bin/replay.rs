@@ -74,8 +74,8 @@ fn main() -> Result<()> {
     println!("== replay: {} files, {lines} lines, {events} pump events, {hours:.2} h of data, {:.1} s ==",
         files.len(), started.elapsed().as_secs_f64());
     println!(
-        "risky events skipped: {}   risk rejects: {}",
-        engine.risky_skipped, engine.rejected
+        "risky events skipped: {}   high-fee events skipped: {}   risk rejects: {}",
+        engine.risky_skipped, engine.fee_skipped, engine.rejected
     );
 
     println!(

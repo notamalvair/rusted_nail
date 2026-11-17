@@ -11,6 +11,8 @@ pub struct SniperConfig {
     pub max_launches_per_creator: u32,
     pub creator_window_ms: u64,
     pub blacklist: HashSet<Wallet>,
+    /// Пропускать запуски с покупкой создателя больше этой (SOL). `None` = без фильтра.
+    pub max_dev_buy_sol: Option<f64>,
 }
 
 impl Default for SniperConfig {
@@ -20,6 +22,7 @@ impl Default for SniperConfig {
             max_launches_per_creator: 1,
             creator_window_ms: 86_400_000,
             blacklist: HashSet::new(),
+            max_dev_buy_sol: None,
         }
     }
 }
@@ -50,7 +53,8 @@ impl Strategy for Sniper {
 
     fn on_event(&mut self, ev: &Event) -> Option<Intent> {
         let Event::Create(c) = ev else { return None };
-        if c.pool != Pool::Pump {
+        // Стартовая цена и модель кривой известны только для SOL-пулов pump.fun.
+        if c.pool != Pool::Pump || !c.sol_quote {
             return None;
         }
         let cutoff = c.ts_ms.saturating_sub(self.cfg.creator_window_ms);
@@ -69,6 +73,7 @@ impl Strategy for Sniper {
 
         if q.len() as u32 > self.cfg.max_launches_per_creator
             || self.cfg.blacklist.contains(&c.creator)
+            || self.cfg.max_dev_buy_sol.is_some_and(|m| c.dev_buy_sol > m)
         {
             return None;
         }
@@ -77,7 +82,10 @@ impl Strategy for Sniper {
             mint: c.mint.clone(),
             side: Side::Buy,
             amount: Amount::Sol(self.cfg.size_sol),
-            reason: format!("new launch {} by {}", c.symbol, c.creator),
+            reason: format!(
+                "new launch {} by {}, dev buy {:.3} SOL",
+                c.symbol, c.creator, c.dev_buy_sol
+            ),
         })
     }
 }

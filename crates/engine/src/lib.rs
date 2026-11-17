@@ -44,6 +44,8 @@ pub struct Engine {
     pub rejected: u64,
     /// События, пропущенные из-за признаков ловушки.
     pub risky_skipped: u64,
+    /// События, пропущенные из-за комиссии пула выше лимита.
+    pub fee_skipped: u64,
     pub stats: BTreeMap<&'static str, StrategyStats>,
     tokens: HashMap<Mint, Token>,
     seen: u64,
@@ -62,6 +64,7 @@ impl Engine {
             pending_timeout_ms: 15_000,
             rejected: 0,
             risky_skipped: 0,
+            fee_skipped: 0,
             stats: BTreeMap::new(),
             tokens: HashMap::new(),
             seen: 0,
@@ -205,6 +208,10 @@ impl Engine {
             self.risky_skipped += 1;
             return out;
         }
+        if ev.pool_fee() > self.risk.max_pool_fee() {
+            self.fee_skipped += 1;
+            return out;
+        }
 
         // Сначала собираем сигналы: стратегии заимствуют self изменяемо.
         let signals: Vec<Intent> = self
@@ -313,6 +320,10 @@ mod tests {
             creator: creator.into(),
             name: "n".into(),
             symbol: "S".into(),
+            sol_quote: true,
+            price: P0,
+            pool_fee: 0.0125,
+            dev_buy_sol: 0.1,
             risky: false,
             block: 0,
             ts_ms: ts,
@@ -331,6 +342,9 @@ mod tests {
             sol_amount: sol,
             price,
             market_cap_sol: price * 1e9,
+            sol_quote: true,
+            pool_fee: 0.0125,
+            curve_sol: 10.0,
             risky: false,
             block: 0,
             ts_ms: ts,
@@ -439,6 +453,18 @@ mod tests {
     }
 
     #[test]
+    fn high_fee_pools_are_skipped() {
+        let mut r = Rig::new(vec![Box::new(Sniper::new(SniperConfig::default()))]);
+        let Event::Create(mut c) = create("A", "dev", 1_000) else {
+            return;
+        };
+        c.pool_fee = 0.0395;
+        r.feed(Event::Create(c));
+        assert!(r.engine.portfolio.positions.is_empty());
+        assert_eq!(r.engine.fee_skipped, 1);
+    }
+
+    #[test]
     fn timeout_exit_fires_on_unrelated_event() {
         let mut r = Rig::new(vec![Box::new(Sniper::new(SniperConfig::default()))]);
         r.feed(create("A", "dev", 1_000));
@@ -450,7 +476,7 @@ mod tests {
     #[test]
     fn momentum_needs_volume_and_unique_buyers() {
         let mut r = Rig::new(vec![Box::new(Momentum::new(MomentumConfig::default()))]);
-        let px = 50.0 / 1e9; // mcap 50 SOL
+        let px = 2.0 * P0;
         for i in 0..4 {
             r.feed(trade("M", "same", Side::Buy, 1.0, px, 1_000 + i));
         }
@@ -462,6 +488,27 @@ mod tests {
             r.feed(trade("M", &format!("w{i}"), Side::Buy, 0.1, px, 1_100 + i));
         }
         assert_eq!(r.engine.portfolio.positions["M"].strategy, "momentum");
+    }
+
+    #[test]
+    fn momentum_ignores_dust_buyers() {
+        let mut r = Rig::new(vec![Box::new(Momentum::new(MomentumConfig::default()))]);
+        let px = 2.0 * P0;
+        r.feed(trade("M", "whale", Side::Buy, 3.0, px, 1_000));
+        for i in 0..10 {
+            r.feed(trade(
+                "M",
+                &format!("bot{i}"),
+                Side::Buy,
+                0.01,
+                px,
+                1_100 + i,
+            ));
+        }
+        assert!(
+            r.engine.portfolio.positions.is_empty(),
+            "пыль bump-ботов не считается"
+        );
     }
 
     #[test]
