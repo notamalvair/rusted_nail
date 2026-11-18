@@ -1,0 +1,492 @@
+{
+  "version": "cohort-tape-v1",
+  "file_schemas": {
+    "data/tape_2026-11-02.parquet": {
+      "rows": 359032,
+      "columns": [
+        {
+          "name": "sample_day",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "dataset_split",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "token_idx",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "action",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "protocol",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "receipt_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "event_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "block",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "archive",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "line",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "tx_signer",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "price_sol",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "reserve_quote",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "parent_quote_amount",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "network_fee_sol",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_index",
+          "type": "int32",
+          "nullable": true
+        },
+        {
+          "name": "leg_action",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "trader",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "leg_quote",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_token",
+          "type": "double",
+          "nullable": true
+        }
+      ]
+    },
+    "data/tokens_2026-11-02.parquet": {
+      "rows": 1966,
+      "columns": [
+        {
+          "name": "sample_day",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "dataset_split",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "token_idx",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "create_occurrence_id",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "base_mint",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "creator",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_receipt_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "create_event_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "create_block",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "end_receipt_ms",
+          "type": "int64",
+          "nullable": true
+        }
+      ]
+    },
+    "data/tape_2026-11-09.parquet": {
+      "rows": 305591,
+      "columns": [
+        {
+          "name": "sample_day",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "dataset_split",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "token_idx",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "action",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "protocol",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "receipt_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "event_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "block",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "archive",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "line",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "tx_signer",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "price_sol",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "reserve_quote",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "parent_quote_amount",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "network_fee_sol",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_index",
+          "type": "int32",
+          "nullable": true
+        },
+        {
+          "name": "leg_action",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "trader",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "leg_quote",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_token",
+          "type": "double",
+          "nullable": true
+        }
+      ]
+    },
+    "data/tokens_2026-11-09.parquet": {
+      "rows": 2044,
+      "columns": [
+        {
+          "name": "sample_day",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "dataset_split",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "token_idx",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "create_occurrence_id",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "base_mint",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "creator",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_receipt_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "create_event_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "create_block",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "end_receipt_ms",
+          "type": "int64",
+          "nullable": true
+        }
+      ]
+    },
+    "data/tape_2026-11-16.parquet": {
+      "rows": 261907,
+      "columns": [
+        {
+          "name": "sample_day",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "dataset_split",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "token_idx",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "action",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "protocol",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "receipt_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "event_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "block",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "archive",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "line",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "tx_signer",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "price_sol",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "reserve_quote",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "parent_quote_amount",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "network_fee_sol",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_index",
+          "type": "int32",
+          "nullable": true
+        },
+        {
+          "name": "leg_action",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "trader",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "leg_quote",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "leg_token",
+          "type": "double",
+          "nullable": true
+        }
+      ]
+    },
+    "data/tokens_2026-11-16.parquet": {
+      "rows": 2050,
+      "columns": [
+        {
+          "name": "sample_day",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "dataset_split",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "token_idx",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "create_occurrence_id",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "base_mint",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "creator",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "create_receipt_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "create_event_ms",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "create_block",
+          "type": "int64",
+          "nullable": true
+        },
+        {
+          "name": "end_receipt_ms",
+          "type": "int64",
+          "nullable": true
+        }
+      ]
+    }
+  },
+  "join_key": [
+    "sample_day",
+    "token_idx"
+  ],
+  "ordering": "token-major: token_idx,receipt_ms,archive,line,leg_index; not global time order",
+  "numeric_policy": "DOUBLE analytic proxies, source decimal text not retained here",
+  "source_status": "written_unvalidated"
+}

@@ -1,0 +1,90 @@
+{
+  "version": "cohort-tape-v1",
+  "repository": "https://github.com/notamalvair/rusted_nail",
+  "revision": "5e2953c4e38ae76a6db5e1834474d0caed46a8b9",
+  "minutes": 15,
+  "source_status": "written_unvalidated",
+  "status": "report_gates_passed",
+  "dates": [
+    {
+      "date": "2026-11-02",
+      "statistics": {
+        "date": "2026-11-02",
+        "block_source": "block_number_raw",
+        "tape_rows": 359032,
+        "tokens_in_tape": 1966,
+        "tokens_in_cohort": 1966,
+        "rows_without_block": 0,
+        "rows_without_price": 0,
+        "tape_bytes": 19950340,
+        "tokens_bytes": 180187,
+        "elapsed_seconds": 66.1
+      },
+      "gate": {
+        "block_source": true,
+        "cohort_count": true,
+        "token_coverage_at_least_99pct": true,
+        "missing_block_below_1pct": true,
+        "missing_price_below_1pct": true
+      },
+      "wrapper_elapsed_seconds": 67.03,
+      "waited_seconds": 151.8
+    },
+    {
+      "date": "2026-11-09",
+      "statistics": {
+        "date": "2026-11-09",
+        "block_source": "block_number_raw",
+        "tape_rows": 305591,
+        "tokens_in_tape": 2044,
+        "tokens_in_cohort": 2044,
+        "rows_without_block": 0,
+        "rows_without_price": 0,
+        "tape_bytes": 16291141,
+        "tokens_bytes": 182420,
+        "elapsed_seconds": 83.3
+      },
+      "gate": {
+        "block_source": true,
+        "cohort_count": true,
+        "token_coverage_at_least_99pct": true,
+        "missing_block_below_1pct": true,
+        "missing_price_below_1pct": true
+      },
+      "wrapper_elapsed_seconds": 84.49,
+      "waited_seconds": 901.4
+    },
+    {
+      "date": "2026-11-16",
+      "statistics": {
+        "date": "2026-11-16",
+        "block_source": "block_number_raw",
+        "tape_rows": 261907,
+        "tokens_in_tape": 2050,
+        "tokens_in_cohort": 2050,
+        "rows_without_block": 0,
+        "rows_without_price": 0,
+        "tape_bytes": 13906391,
+        "tokens_bytes": 187305,
+        "elapsed_seconds": 17.7
+      },
+      "gate": {
+        "block_source": true,
+        "cohort_count": true,
+        "token_coverage_at_least_99pct": true,
+        "missing_block_below_1pct": true,
+        "missing_price_below_1pct": true
+      },
+      "wrapper_elapsed_seconds": 18.37,
+      "waited_seconds": 180.1
+    }
+  ],
+  "total_tokens": 6060,
+  "total_tape_rows": 926530,
+  "total_data_bytes": 50697784,
+  "rust_build_run": false,
+  "rust_tests_run": false,
+  "replay_run": false,
+  "paper_run": false,
+  "next_tasks_location": "user home PC"
+}

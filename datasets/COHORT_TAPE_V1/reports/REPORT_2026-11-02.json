@@ -1,0 +1,20 @@
+{
+  "version": "cohort-tape-v1",
+  "minutes": 15,
+  "started_at_utc": "2026-11-18T08:26:59.510803+00:00",
+  "dates": [
+    {
+      "date": "2026-11-02",
+      "block_source": "block_number_raw",
+      "tape_rows": 359032,
+      "tokens_in_tape": 1966,
+      "tokens_in_cohort": 1966,
+      "rows_without_block": 0,
+      "rows_without_price": 0,
+      "tape_bytes": 19950340,
+      "tokens_bytes": 180187,
+      "elapsed_seconds": 66.1
+    }
+  ],
+  "status": "written"
+}

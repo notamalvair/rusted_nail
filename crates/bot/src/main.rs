@@ -1,5 +1,6 @@
-//! rusted_nail [config.toml] [--live]
+//! rusted_nail [config.toml] [--live] [--for-secs=N]
 //! По умолчанию paper-режим: живой стрим, виртуальные сделки. Реальные деньги только с --live.
+//! --for-secs=N: остановиться через N секунд (для контролируемых прогонов).
 
 use std::collections::VecDeque;
 use std::sync::Arc;
@@ -125,6 +126,12 @@ async fn main() -> Result<()> {
         .iter()
         .find(|a| !a.starts_with("--"))
         .map_or("config.toml", String::as_str);
+    let run_for = match args.iter().find_map(|a| a.strip_prefix("--for-secs=")) {
+        Some(v) => Some(Duration::from_secs(
+            v.parse().context("--for-secs expects whole seconds")?,
+        )),
+        None => None,
+    };
     let cfg = config::load(path)?;
 
     let mut engine = cfg.engine();
@@ -182,9 +189,16 @@ async fn main() -> Result<()> {
     // Отставание стрима: наши часы минус время блока. Грубая оценка, зависит от синхронизации часов.
     let (mut lag_sum, mut lag_max, mut lag_n, mut lag_last) = (0u64, 0u64, 0u64, 0u64);
     let mut recent: VecDeque<FillRow> = VecDeque::with_capacity(RECENT_FILLS);
+    // Без --for-secs таймер стоит на 10 лет и не срабатывает.
+    let deadline = tokio::time::sleep(run_for.unwrap_or(Duration::from_secs(10 * 365 * 86_400)));
+    tokio::pin!(deadline);
 
     loop {
         tokio::select! {
+            () = &mut deadline => {
+                println!("[bot] --for-secs elapsed, stopping");
+                break;
+            }
             ev = ev_rx.recv() => {
                 let Some(ev) = ev else { break };
                 events += 1;
@@ -275,6 +289,12 @@ async fn main() -> Result<()> {
             }
         }
     }
+    println!(
+        "[bot] final: events={events} open={} realized={:+.5} day={:+.5}",
+        engine.portfolio.positions.len(),
+        engine.portfolio.realized_pnl_sol,
+        engine.risk.day_pnl_sol(),
+    );
     Ok(())
 }
 

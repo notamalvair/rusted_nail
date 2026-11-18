@@ -26,7 +26,7 @@ import duckdb
 WSOL = "So11111111111111111111111111111111111111112"
 DATES = ("2026-11-02", "2026-11-09", "2026-11-16")
 SPLITS = {"2026-11-02": "train", "2026-11-09": "validation", "2026-11-16": "test"}
-BLOCK_CANDIDATES = ("block", "slot", "block_number", "block_slot", "source_block")
+BLOCK_CANDIDATES = ("block_number_raw", "block", "slot", "block_number", "block_slot", "source_block")
 RAW_CANDIDATES = ("raw_json", "raw_payload_json", "raw_payload", "payload_json")
 
 

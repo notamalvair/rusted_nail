@@ -23,6 +23,7 @@
 cp config.example.toml config.toml
 cargo test
 cargo run --release              # paper: живой стрим, виртуальные сделки
+cargo run --release -- config.toml --for-secs=1800   # paper на 30 минут и стоп
 ```
 
 Панель управления открывается на http://127.0.0.1:8787: стоп покупок, включение и выключение
